@@ -230,10 +230,14 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Navigation entre fenêtres avec <leader>w
+vim.keymap.set('n', '<leader>wh', '<C-w><C-h>', { desc = 'Fenêtre gauche' })
+vim.keymap.set('n', '<leader>wj', '<C-w><C-j>', { desc = 'Fenêtre bas' })
+vim.keymap.set('n', '<leader>wk', '<C-w><C-k>', { desc = 'Fenêtre haut' })
+vim.keymap.set('n', '<leader>wl', '<C-w><C-l>', { desc = 'Fenêtre droite' })
 vim.keymap.set('n', '<leader>ww', '<C-w>w', { desc = 'Fenêtre suivante' })
 vim.keymap.set('n', '<leader>wq', '<C-w>q', { desc = 'Fermer fenêtre' })
 vim.keymap.set('n', '<leader>wv', '<C-w>v', { desc = 'Split vertical' })
-vim.keymap.set('n', '<leader>wh', '<C-w>s', { desc = 'Split horizontal' })
+vim.keymap.set('n', '<leader>ws', '<C-w>s', { desc = 'Split horizontal' })
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
