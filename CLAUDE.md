@@ -1,11 +1,14 @@
 # Instructions Claude - Config Neovim
 
-## Workflow automatique pour ce projet
-**IMPORTANT** : À chaque modification de la configuration Neovim :
-1. Faire automatiquement `git add` + `git commit` + `git push`
-2. Utiliser des messages de commit descriptifs
-3. Ne pas demander confirmation à l'utilisateur
-4. Considérer cela comme partie intégrante du processus de modification
+## ⚠️ WORKFLOW AUTOMATIQUE OBLIGATOIRE - CONFIGURATIONS CLAUDE ⚠️
+**RÈGLE ABSOLUE** : À chaque modification des fichiers de configuration Claude (`~/.claude/`) :
+1. **IMMÉDIATEMENT** après toute modification : `git add . && git commit && git push`
+2. **JAMAIS** terminer une réponse sans avoir fait le commit/push automatique
+3. **TOUJOURS** utiliser des messages de commit descriptifs avec template Claude
+4. **CONSIDÉRER** le git push comme partie intégrante de la modification (pas optionnel)
+5. **NE PAS ATTENDRE** de commande utilisateur - le faire automatiquement
+
+**RAPPEL** : Si tu modifies un fichier dans `~/.claude/`, tu DOIS finir par git add/commit/push dans la même réponse.
 
 ## Contexte du projet
 - Configuration Neovim basée sur Kickstart.nvim
