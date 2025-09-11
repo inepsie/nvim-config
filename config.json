@@ -21,9 +21,9 @@
   },
   "permissions": {
     "allow": [
-      "Bash(git *)",
-      "Bash(cd *)",
-      "Bash(cd * && git *)",
+      "Bash(git:*)",
+      "Bash(cd:*)",
+      "Bash(cd * && git:*)",
       "Read",
       "Write", 
       "Edit",
@@ -31,5 +31,6 @@
     ],
     "ask": [],
     "deny": []
-  }
+  },
+  "additionalDirectories": ["~/.config/nvim/", "~/.claude/"]
 }
