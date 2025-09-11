@@ -9,6 +9,6 @@ return {
   test_message = "Auto-push test réussi dans nvim config - MODIFICATION",
   timestamp = os.date("%Y-%m-%d %H:%M:%S"),
   location = "~/.config/nvim/",
-  modification_count = 1,
+  modification_count = 2,
   status = "modified for auto-push test"
 }
