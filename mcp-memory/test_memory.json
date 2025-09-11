@@ -1,0 +1,53 @@
+{
+  "memories": [
+    {
+      "id": "test-001",
+      "timestamp": "2025-01-09T12:00:00Z",
+      "content": "Configuration Neovim de l'utilisateur avec Kickstart.nvim",
+      "tags": ["neovim", "configuration", "kickstart"],
+      "context": "Test du système de mémoire MCP"
+    },
+    {
+      "id": "test-002", 
+      "timestamp": "2025-01-09T12:01:00Z",
+      "content": "L'utilisateur utilise le thème Flexoki avec des fonctions en blanc",
+      "tags": ["thème", "flexoki", "couleurs"],
+      "context": "Préférences visuelles"
+    },
+    {
+      "id": "user-info-001",
+      "timestamp": "2025-09-09T12:00:00Z",
+      "content": "La ville natale de l'utilisateur est Gien",
+      "tags": ["personnel", "ville", "origine"],
+      "context": "Informations personnelles de l'utilisateur"
+    },
+    {
+      "id": "user-info-002",
+      "timestamp": "2025-09-09T12:05:00Z",
+      "content": "L'année de naissance de l'utilisateur est 1993",
+      "tags": ["personnel", "naissance", "année"],
+      "context": "Informations personnelles de l'utilisateur"
+    },
+    {
+      "id": "keymaps-001",
+      "timestamp": "2025-09-10T12:00:00Z",
+      "content": "Raccourci Neovim: <leader>wv pour split vertical de window",
+      "tags": ["neovim", "raccourcis", "keymaps", "split"],
+      "context": "Raccourcis personnalisés Neovim de l'utilisateur"
+    },
+    {
+      "id": "git-config-001",
+      "timestamp": "2025-09-11T15:45:00Z",
+      "content": "Configuration Git avec credential helper automatique : script ~/.local/bin/git-credential-claude qui lit le token GitHub depuis ~/.claude/.credentials.json",
+      "tags": ["git", "credentials", "github", "token", "automation"],
+      "context": "Configuration système pour push automatique GitHub"
+    },
+    {
+      "id": "keymaps-002", 
+      "timestamp": "2025-09-11T15:30:00Z",
+      "content": "Raccourcis Neovim navigation fenêtres : <leader>w + hjkl pour aller gauche/bas/haut/droite, <leader>ws pour split horizontal, <leader>wv pour split vertical",
+      "tags": ["neovim", "raccourcis", "navigation", "fenêtres", "hjkl"],
+      "context": "Raccourcis de navigation entre fenêtres avec leader + hjkl"
+    }
+  ]
+}
