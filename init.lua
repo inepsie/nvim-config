@@ -240,7 +240,15 @@ vim.keymap.set('n', '<leader>wv', '<C-w>v', { desc = 'Split vertical' })
 vim.keymap.set('n', '<leader>ws', '<C-w>s', { desc = 'Split horizontal' })
 
 -- Recharger la config rapidement
-vim.keymap.set('n', '<leader>rr', ':source ~/.config/nvim/init.lua<CR>', { desc = 'Recharger config' })
+vim.keymap.set('n', '<leader>rr', function()
+  for name,_ in pairs(package.loaded) do
+    if name:match('^plugins') or name:match('^config') or name:match('^custom') or name:match('^kickstart') then
+      package.loaded[name] = nil
+    end
+  end
+  dofile(vim.env.MYVIMRC)
+  vim.notify("Config rechargée!", vim.log.levels.INFO)
+end, { desc = 'Recharger config' })
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
