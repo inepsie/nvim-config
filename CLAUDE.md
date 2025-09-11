@@ -16,3 +16,4 @@
 - Thème Flexoki avec fonctions en blanc
 - Repo GitHub : https://github.com/inepsie/nvim-config.git
 - Credential helper automatique configuré via `~/.local/bin/git-credential-claude`
+- Test modification config nvim - 2025-09-12
