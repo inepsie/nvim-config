@@ -12,9 +12,3 @@
 - Thème Flexoki avec fonctions en blanc
 - Repo GitHub : https://github.com/inepsie/nvim-config.git
 - Credential helper automatique configuré via `~/.local/bin/git-credential-claude`
-
-## Raccourcis personnalisés actuels
-- `<leader>w` + `hjkl` : Navigation entre fenêtres
-- `<leader>ws/wv` : Splits horizontal/vertical
-- `<leader>rr` : Recharger la config
-- `<leader>tc` : Fermer onglet
