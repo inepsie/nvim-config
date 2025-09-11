@@ -239,6 +239,8 @@ vim.keymap.set('n', '<leader>wq', '<C-w>q', { desc = 'Fermer fenêtre' })
 vim.keymap.set('n', '<leader>wv', '<C-w>v', { desc = 'Split vertical' })
 vim.keymap.set('n', '<leader>ws', '<C-w>s', { desc = 'Split horizontal' })
 
+-- Test credential helper
+
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
