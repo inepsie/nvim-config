@@ -1045,6 +1045,38 @@ require('lazy').setup({
   require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
   require 'kickstart.plugins.neo-tree',
 
+  -- Flash.nvim for quick navigation (like evil-snipe)
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {
+      modes = {
+        char = {
+          enabled = true,
+          -- Configuration similaire à evil-snipe
+          keys = { "f", "F", "t", "T", ";", "," },
+        },
+        search = {
+          enabled = false, -- On garde la recherche normale de Neovim
+        },
+      },
+    },
+    keys = {
+      {
+        's',
+        mode = { 'n', 'x', 'o' },
+        function() require('flash').jump() end,
+        desc = 'Flash Jump (like evil-snipe)',
+      },
+      {
+        'S',
+        mode = { 'n', 'x', 'o' },
+        function() require('flash').treesitter() end,
+        desc = 'Flash Treesitter',
+      },
+    },
+  },
+
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
