@@ -210,6 +210,23 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('n', '<C-j>', ':cnext<CR>', { desc = 'Next quickfix item' })
 vim.keymap.set('n', '<C-k>', ':cprev<CR>', { desc = 'Previous quickfix item' })
 
+-- Configuration pour ouvrir automatiquement la quickfix après make
+vim.api.nvim_create_autocmd('QuickFixCmdPost', {
+  group = vim.api.nvim_create_augroup('auto-quickfix', { clear = true }),
+  pattern = 'make',
+  callback = function()
+    -- Vérifier s'il y a des erreurs dans la quickfix list
+    local qflist = vim.fn.getqflist()
+    if #qflist > 0 then
+      -- Ouvrir la quickfix list
+      vim.cmd('copen')
+      -- Sauter à la première erreur
+      vim.cmd('cfirst')
+    end
+  end,
+  desc = 'Ouvrir quickfix et aller à la première erreur après make'
+})
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
