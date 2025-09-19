@@ -214,7 +214,42 @@ vim.keymap.set('n', '<leader>qc', ':cclose<CR>', { desc = 'Close quickfix list' 
 vim.keymap.set('n', '<leader>qf', ':cfirst<CR>', { desc = 'First quickfix item' })
 vim.keymap.set('n', '<leader>ql', ':clast<CR>', { desc = 'Last quickfix item' })
 
--- Configuration pour ouvrir automatiquement la quickfix après make/cmake/etc
+-- Améliorer errorformat pour C/C++ avec gcc/clang
+vim.opt.errorformat:prepend({
+  '%f:%l:%c: %trror: %m',      -- gcc/clang format avec colonne
+  '%f:%l:%c: %tarning: %m',    -- warnings avec colonne
+  '%f:%l:%c: %tote: %m',       -- notes avec colonne
+  '%f:%l: %trror: %m',         -- format sans colonne
+  '%f:%l: %tarning: %m',       -- warnings sans colonne
+  'make: *** %m',              -- erreurs make
+  'ld: %m',                    -- erreurs linker
+})
+
+-- Commande Make personnalisée qui capture la sortie dans quickfix
+vim.api.nvim_create_user_command('Make', function(opts)
+  local cmd = opts.args ~= '' and ('make ' .. opts.args) or 'make'
+
+  -- Sauvegarder le répertoire courant pour les chemins relatifs
+  local cwd = vim.fn.getcwd()
+
+  -- Exécuter make et capturer la sortie dans quickfix
+  vim.cmd('cexpr system("cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1")')
+
+  -- Vérifier s'il y a des erreurs et ouvrir quickfix
+  local qflist = vim.fn.getqflist()
+  if #qflist > 0 then
+    vim.cmd('copen')
+    print("Build terminé avec " .. #qflist .. " entrée(s)")
+  else
+    vim.cmd('cclose')
+    print("Build réussi sans erreurs!")
+  end
+end, {
+  nargs = '*',
+  desc = 'Run make and populate quickfix list'
+})
+
+-- Configuration pour ouvrir automatiquement la quickfix après :make Vim native
 vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   group = vim.api.nvim_create_augroup('auto-quickfix', { clear = true }),
   pattern = '*',  -- Tous les patterns au lieu de juste 'make'
@@ -232,7 +267,7 @@ vim.api.nvim_create_autocmd('QuickFixCmdPost', {
       print("Build réussi sans erreurs!")
     end
   end,
-  desc = 'Ouvrir quickfix automatiquement après les commandes de build'
+  desc = 'Ouvrir quickfix automatiquement après les commandes de build Vim natives'
 })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -276,6 +311,25 @@ vim.keymap.set('n', '<leader>rr', function()
   dofile(vim.env.MYVIMRC)
   vim.notify("Config rechargée!", vim.log.levels.INFO)
 end, { desc = 'Recharger config' })
+
+-- Keymaps pour make rapide avec quickfix
+vim.keymap.set('n', '<leader>m', ':Make<CR>', { desc = '[M]ake project' })
+vim.keymap.set('n', '<leader>mm', function()
+  vim.cmd('cexpr system("make 2>&1")')
+  local qflist = vim.fn.getqflist()
+  if #qflist > 0 then
+    vim.cmd('copen')
+    print("Make terminé avec " .. #qflist .. " entrée(s)")
+  else
+    vim.cmd('cclose')
+    print("Make réussi!")
+  end
+end, { desc = 'Quick [M]ake' })
+
+-- Make avec target spécifique
+vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
+vim.keymap.set('n', '<leader>mr', ':Make run<CR>', { desc = '[M]ake [r]un' })
+vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
@@ -487,6 +541,7 @@ require('lazy').setup({
         { '<leader>t', group = '[T]oggle' },
         { '<leader>w', group = '[W]indows' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>m', group = '[M]ake' },
       },
     },
   },
