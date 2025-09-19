@@ -135,8 +135,8 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Save undo history
 vim.o.undofile = true
 
--- Change working directory to current file
-vim.o.autochdir = true
+-- Change working directory to current file (commenté car problématique avec quickfix)
+-- vim.o.autochdir = true
 
 -- Close current tab
 vim.keymap.set('n', '<leader>tc', ':tabclose<CR>', { desc = 'Close current tab' })
@@ -209,22 +209,30 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- Quickfix navigation keymaps
 vim.keymap.set('n', '<C-j>', ':cnext<CR>', { desc = 'Next quickfix item' })
 vim.keymap.set('n', '<C-k>', ':cprev<CR>', { desc = 'Previous quickfix item' })
+vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = 'Open quickfix list' })
+vim.keymap.set('n', '<leader>qc', ':cclose<CR>', { desc = 'Close quickfix list' })
+vim.keymap.set('n', '<leader>qf', ':cfirst<CR>', { desc = 'First quickfix item' })
+vim.keymap.set('n', '<leader>ql', ':clast<CR>', { desc = 'Last quickfix item' })
 
--- Configuration pour ouvrir automatiquement la quickfix après make
+-- Configuration pour ouvrir automatiquement la quickfix après make/cmake/etc
 vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   group = vim.api.nvim_create_augroup('auto-quickfix', { clear = true }),
-  pattern = 'make',
+  pattern = '*',  -- Tous les patterns au lieu de juste 'make'
   callback = function()
     -- Vérifier s'il y a des erreurs dans la quickfix list
     local qflist = vim.fn.getqflist()
     if #qflist > 0 then
-      -- Ouvrir la quickfix list
+      -- Ouvrir la quickfix list seulement s'il y a des erreurs/warnings
       vim.cmd('copen')
-      -- Sauter à la première erreur
-      vim.cmd('cfirst')
+      -- Optionnel: sauter à la première erreur
+      -- vim.cmd('cfirst')
+    else
+      -- Fermer la quickfix si elle était ouverte et qu'il n'y a plus d'erreurs
+      vim.cmd('cclose')
+      print("Build réussi sans erreurs!")
     end
   end,
-  desc = 'Ouvrir quickfix et aller à la première erreur après make'
+  desc = 'Ouvrir quickfix automatiquement après les commandes de build'
 })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
