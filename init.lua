@@ -236,6 +236,12 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
   local output = vim.fn.system(full_cmd)
 
+  -- Debug: afficher la sortie brute
+  print("DEBUG - Commande exécutée:", full_cmd)
+  print("DEBUG - Sortie complète:")
+  print(output)
+  print("DEBUG - Fin de sortie")
+
   -- Parser les erreurs avec regex pour créer des liens cliquables
   local lines = vim.split(output, '\n')
   local qf_items = {}
