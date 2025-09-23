@@ -324,8 +324,11 @@ vim.api.nvim_create_user_command('Make', function(opts)
   -- Debug: afficher le contenu de la quickfix list
   print("DEBUG - Nombre d'items dans quickfix:", #qflist)
   for i, item in ipairs(qflist) do
-    print("DEBUG - Item", i, ":", vim.inspect(item))
-    if item.filename and item.lnum then
+    if i <= 3 then -- Limiter le debug aux 3 premiers items
+      print("DEBUG - Item", i, ":", vim.inspect(item))
+    end
+    -- Vérifier les vraies erreurs avec valid = 1 et bufnr > 0
+    if item.valid == 1 and item.bufnr > 0 and item.lnum > 0 then
       error_count = error_count + 1
     end
   end
