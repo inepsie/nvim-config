@@ -59,11 +59,55 @@ vim.api.nvim_create_user_command('Make', function(opts)
   vim.cmd('cwindow')
 end, { nargs = '*' })
 
+-- Intelligent Run command that detects CMake projects
+vim.api.nvim_create_user_command('Run', function(opts)
+  -- Check if we're in a CMake project by looking for CMakeLists.txt
+  local function find_cmake_root()
+    local path = vim.fn.expand("%:p:h")
+    while path ~= "/" do
+      if vim.fn.filereadable(path .. "/CMakeLists.txt") == 1 then
+        return path
+      end
+      path = vim.fn.fnamemodify(path, ":h")
+    end
+    return nil
+  end
+
+  local cmake_root = find_cmake_root()
+  if cmake_root then
+    -- CMake project: try to find and run the executable
+    local build_dir = cmake_root .. "/build"
+    if vim.fn.isdirectory(build_dir) == 0 then
+      print("Build directory not found. Run make first!")
+      return
+    end
+
+    -- Look for executable in build directory
+    local executables = vim.fn.glob(build_dir .. "/*", false, true)
+    local exe_path = nil
+    for _, file in ipairs(executables) do
+      if vim.fn.executable(file) == 1 then
+        exe_path = file
+        break
+      end
+    end
+
+    if exe_path then
+      vim.cmd('!' .. vim.fn.shellescape(exe_path) .. ' ' .. opts.args)
+    else
+      print("No executable found in build directory")
+    end
+  else
+    -- Traditional make project: try make run
+    vim.cmd('make run ' .. opts.args)
+  end
+end, { nargs = '*' })
+
 vim.keymap.set('n', '<leader>mm', ':Make<CR>', { desc = 'Make with auto quickfix' })
 
 -- Make with specific targets
 vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
-vim.keymap.set('n', '<leader>mr', ':Make run<CR>', { desc = '[M]ake [r]un' })
+vim.keymap.set('n', '<leader>mr', ':Run<CR>', { desc = 'Run project executable' })
 vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
 
 
