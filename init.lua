@@ -229,8 +229,11 @@ vim.opt.errorformat:prepend({
 vim.api.nvim_create_user_command('Make', function(opts)
   local cmd = opts.args ~= '' and ('make ' .. opts.args) or 'make'
 
-  -- Sauvegarder le répertoire courant pour les chemins relatifs
-  local cwd = vim.fn.getcwd()
+  -- Utiliser le répertoire du fichier courant ou getcwd() comme fallback
+  local cwd = vim.fn.expand('%:p:h') -- Répertoire du fichier courant
+  if cwd == '' or not vim.fn.isdirectory(cwd) then
+    cwd = vim.fn.getcwd()
+  end
 
   -- Exécuter make et capturer la sortie dans quickfix
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
