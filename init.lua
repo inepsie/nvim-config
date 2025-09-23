@@ -261,15 +261,24 @@ vim.api.nvim_create_user_command('Make', function(opts)
   print(output)
   print("DEBUG - Fin de sortie")
 
-  -- Utiliser cexpr avec errorformat au lieu de parser manuellement
-  -- Sauvegarder l'errorformat actuel
-  local old_efm = vim.o.errorformat
+  -- Utiliser setqflist avec errorformat de manière plus sûre
+  -- Diviser la sortie en lignes et créer une liste temporaire
+  local lines = vim.split(output, '\n')
 
-  -- Configurer errorformat pour C/C++
+  -- Sauvegarder l'errorformat actuel et le configurer pour C/C++
+  local old_efm = vim.o.errorformat
   vim.o.errorformat = '%f:%l:%c: %trror: %m,%f:%l:%c: %tarning: %m,%f:%l:%c: %tote: %m,%f:%l: %trror: %m,%f:%l: %tarning: %m,make: *** %m,ld: %m'
 
-  -- Utiliser cexpr pour remplir la quickfix avec errorformat
-  vim.cmd('cexpr ' .. vim.fn.string(output))
+  -- Vider la quickfix et utiliser setqflist avec errorformat
+  vim.fn.setqflist({}, 'r')
+  for _, line in ipairs(lines) do
+    if line:match('%S') then -- Si la ligne n'est pas vide
+      vim.fn.setqflist({}, 'a', {
+        lines = {line},
+        efm = vim.o.errorformat
+      })
+    end
+  end
 
   -- Restaurer l'errorformat
   vim.o.errorformat = old_efm
