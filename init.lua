@@ -233,7 +233,12 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local cwd = vim.fn.getcwd()
 
   -- Exécuter make et capturer la sortie dans quickfix
-  vim.cmd('cexpr system("cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1")')
+  local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
+  local output = vim.fn.system(full_cmd)
+
+  -- Utiliser cexpr avec une chaîne sûre
+  vim.fn.setqflist({}, 'r')  -- Vider la quickfix list
+  vim.fn.cexpr(output)
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
