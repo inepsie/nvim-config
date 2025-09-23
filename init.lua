@@ -321,12 +321,16 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local qflist = vim.fn.getqflist()
   local error_count = 0
 
-  -- Compter les vraies erreurs (pas juste les lignes de sortie)
-  for _, item in ipairs(qflist) do
+  -- Debug: afficher le contenu de la quickfix list
+  print("DEBUG - Nombre d'items dans quickfix:", #qflist)
+  for i, item in ipairs(qflist) do
+    print("DEBUG - Item", i, ":", vim.inspect(item))
     if item.filename and item.lnum then
       error_count = error_count + 1
     end
   end
+
+  print("DEBUG - Nombre d'erreurs comptées:", error_count)
 
   if error_count > 0 then
     vim.cmd('copen')
