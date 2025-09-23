@@ -229,11 +229,27 @@ vim.opt.errorformat:prepend({
 vim.api.nvim_create_user_command('Make', function(opts)
   local cmd = opts.args ~= '' and ('make ' .. opts.args) or 'make'
 
-  -- Utiliser le répertoire du fichier courant ou getcwd() comme fallback
-  local cwd = vim.fn.expand('%:p:h') -- Répertoire du fichier courant
-  if cwd == '' or not vim.fn.isdirectory(cwd) then
-    cwd = vim.fn.getcwd()
+  -- Trouver la racine du projet (répertoire avec CMakeLists.txt)
+  local function find_project_root(start_path)
+    local path = start_path or vim.fn.expand('%:p:h')
+    if path == '' then
+      path = vim.fn.getcwd()
+    end
+
+    -- Remonter jusqu'à trouver CMakeLists.txt ou Makefile
+    while path ~= '/' do
+      if vim.fn.filereadable(path .. '/CMakeLists.txt') == 1 or
+         vim.fn.filereadable(path .. '/Makefile') == 1 then
+        return path
+      end
+      path = vim.fn.fnamemodify(path, ':h')
+    end
+
+    -- Fallback au répertoire courant
+    return vim.fn.getcwd()
   end
+
+  local cwd = find_project_root()
 
   -- Exécuter make et capturer la sortie dans quickfix
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
