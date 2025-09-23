@@ -1,0 +1,11 @@
+{
+  "memories": [
+    {
+      "id": "keymap-messages-001",
+      "timestamp": "2025-09-23T15:30:00Z",
+      "content": "Raccourci Neovim: <leader>qm pour afficher les erreurs/logs d'une commande dans un buffer navigable",
+      "tags": ["neovim", "raccourcis", "messages", "erreurs", "logs", "buffer"],
+      "context": "L'utilisateur a demandé un moyen d'afficher :messages dans un buffer pour voir les logs des commandes shell. Le raccourci <leader>qm crée un buffer temporaire en lecture seule avec le contenu de :messages."
+    }
+  ]
+}
