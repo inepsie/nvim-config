@@ -236,13 +236,40 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
   local output = vim.fn.system(full_cmd)
 
-  -- Solution sans errorformat - setqflist direct avec items
+  -- Parser les erreurs avec regex pour créer des liens cliquables
   local lines = vim.split(output, '\n')
   local qf_items = {}
 
   for _, line in ipairs(lines) do
     if line:match('%S') then  -- si la ligne n'est pas vide
-      table.insert(qf_items, { text = line })
+      -- Parser les erreurs C/C++ format: file:line:col: type: message
+      local file, lnum, col, etype, msg = line:match('([^:]+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+
+      if file and lnum and col and etype and msg then
+        -- Erreur avec fichier:ligne:colonne
+        table.insert(qf_items, {
+          filename = file,
+          lnum = tonumber(lnum),
+          col = tonumber(col),
+          type = etype:sub(1,1):upper(), -- 'E' pour error, 'W' pour warning
+          text = etype .. ': ' .. msg
+        })
+      else
+        -- Parser format sans colonne: file:line: type: message
+        file, lnum, etype, msg = line:match('([^:]+):(%d+):%s*(%w+):%s*(.*)')
+
+        if file and lnum and etype and msg then
+          table.insert(qf_items, {
+            filename = file,
+            lnum = tonumber(lnum),
+            type = etype:sub(1,1):upper(),
+            text = etype .. ': ' .. msg
+          })
+        else
+          -- Ligne générale (pas une erreur spécifique)
+          table.insert(qf_items, { text = line })
+        end
+      end
     end
   end
 
@@ -251,9 +278,18 @@ vim.api.nvim_create_user_command('Make', function(opts)
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
-  if #qflist > 0 then
+  local error_count = 0
+
+  -- Compter les vraies erreurs (pas juste les lignes de sortie)
+  for _, item in ipairs(qflist) do
+    if item.filename and item.lnum then
+      error_count = error_count + 1
+    end
+  end
+
+  if error_count > 0 then
     vim.cmd('copen')
-    print("Build terminé avec " .. #qflist .. " entrée(s)")
+    print("Build terminé avec " .. error_count .. " erreur(s)/warning(s)")
   else
     vim.cmd('cclose')
     print("Build réussi sans erreurs!")
