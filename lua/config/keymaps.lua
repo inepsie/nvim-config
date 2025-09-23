@@ -82,20 +82,46 @@ vim.api.nvim_create_user_command('Run', function(opts)
       return
     end
 
-    -- Look for executable in build directory
-    local executables = vim.fn.glob(build_dir .. "/*", false, true)
-    local exe_path = nil
-    for _, file in ipairs(executables) do
-      if vim.fn.executable(file) == 1 then
-        exe_path = file
-        break
+    -- Look for executable in build directory (recursively)
+    local function find_executable(dir)
+      -- Try common executable locations and patterns
+      local patterns = {
+        dir .. "/*",           -- Direct in build
+        dir .. "/*/",          -- Subdirectories
+        dir .. "/*/*",         -- Files in subdirectories
+      }
+
+      for _, pattern in ipairs(patterns) do
+        local files = vim.fn.glob(pattern, false, true)
+        for _, file in ipairs(files) do
+          -- Skip directories and common non-executables
+          if vim.fn.isdirectory(file) == 0 and
+             not file:match("%.o$") and
+             not file:match("%.a$") and
+             not file:match("%.so$") and
+             not file:match("%.cmake$") and
+             not file:match("CMakeFiles") and
+             not file:match("Makefile") and
+             vim.fn.executable(file) == 1 then
+            return file
+          end
+        end
       end
+      return nil
     end
 
+    local exe_path = find_executable(build_dir)
     if exe_path then
+      print("Running: " .. vim.fn.fnamemodify(exe_path, ":t"))
       vim.cmd('!' .. vim.fn.shellescape(exe_path) .. ' ' .. opts.args)
     else
-      print("No executable found in build directory")
+      print("No executable found in build directory. Available files:")
+      local all_files = vim.fn.glob(build_dir .. "/**/*", false, true)
+      for i, file in ipairs(all_files) do
+        if i <= 5 then -- Show only first 5 files
+          print("  " .. vim.fn.fnamemodify(file, ":t"))
+        end
+      end
     end
   else
     -- Traditional make project: try make run
