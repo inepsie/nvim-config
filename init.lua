@@ -243,12 +243,17 @@ vim.api.nvim_create_user_command('Make', function(opts)
   for _, line in ipairs(lines) do
     if line:match('%S') then  -- si la ligne n'est pas vide
       -- Parser les erreurs C/C++ format: file:line:col: type: message
-      -- Pattern plus robuste pour chemins avec /
-      local file, lnum, col, etype, msg = line:match('([^:]+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+      -- Pattern optimisé pour chemins absolus/relatifs
+      local file, lnum, col, etype, msg = line:match('([^%s]+):(%d+):(%d+):%s*(%w+):%s*(.*)')
 
-      -- Si pas trouvé, essayer avec un pattern plus permissif pour les chemins
-      if not file then
-        file, lnum, col, etype, msg = line:match('([/%.%w_%-]+%.%w+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+      -- Debug: afficher la ligne pour comprendre pourquoi ça ne matche pas
+      if line:match('error:') or line:match('warning:') then
+        print("DEBUG - Ligne d'erreur:", line)
+        if file then
+          print("DEBUG - Parsé:", file, lnum, col, etype, msg)
+        else
+          print("DEBUG - Pas de match pour le pattern")
+        end
       end
 
       if file and lnum and col and etype and msg then
