@@ -331,6 +331,20 @@ vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' }
 vim.keymap.set('n', '<leader>mr', ':Make run<CR>', { desc = '[M]ake [r]un' })
 vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
 
+-- Afficher les messages dans un buffer
+vim.keymap.set('n', '<leader>qm', function()
+  -- Créer un nouveau buffer temporaire
+  vim.cmd('new')
+  vim.cmd('setlocal buftype=nofile bufhidden=wipe noswapfile')
+  vim.cmd('file Messages')
+  -- Récupérer et insérer les messages
+  local messages = vim.fn.execute('messages')
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(messages, '\n'))
+  -- Rendre le buffer en lecture seule
+  vim.bo.readonly = true
+  vim.bo.modifiable = false
+end, { desc = '[Q]uickfix [M]essages in buffer' })
+
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
