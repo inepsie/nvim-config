@@ -246,8 +246,8 @@ vim.api.nvim_create_user_command('Make', function(opts)
     end
   end
 
-  -- Utiliser setqflist avec items directement (sans parsing errorformat)
-  vim.fn.setqflist(qf_items, 'r', { title = 'Make Output' })
+  -- Utiliser setqflist avec la syntaxe correcte
+  vim.fn.setqflist({}, 'r', { title = 'Make Output', items = qf_items })
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
