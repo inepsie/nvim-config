@@ -261,61 +261,18 @@ vim.api.nvim_create_user_command('Make', function(opts)
   print(output)
   print("DEBUG - Fin de sortie")
 
-  -- Parser les erreurs avec regex pour créer des liens cliquables
-  local lines = vim.split(output, '\n')
-  local qf_items = {}
+  -- Utiliser cexpr avec errorformat au lieu de parser manuellement
+  -- Sauvegarder l'errorformat actuel
+  local old_efm = vim.o.errorformat
 
-  for _, line in ipairs(lines) do
-    if line:match('%S') then  -- si la ligne n'est pas vide
-      -- Parser les erreurs C/C++ format: file:line:col: type: message
-      -- Pattern optimisé pour chemins absolus/relatifs
-      local file, lnum, col, etype, msg = line:match('([^%s]+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+  -- Configurer errorformat pour C/C++
+  vim.o.errorformat = '%f:%l:%c: %trror: %m,%f:%l:%c: %tarning: %m,%f:%l:%c: %tote: %m,%f:%l: %trror: %m,%f:%l: %tarning: %m,make: *** %m,ld: %m'
 
-      -- Debug: afficher la ligne pour comprendre pourquoi ça ne matche pas
-      if line:match('error:') or line:match('warning:') then
-        print("DEBUG - Ligne d'erreur:", line)
-        if file then
-          print("DEBUG - Parsé:", file, lnum, col, etype, msg)
-        else
-          print("DEBUG - Pas de match pour le pattern")
-        end
-      end
+  -- Utiliser cexpr pour remplir la quickfix avec errorformat
+  vim.cmd('cexpr ' .. vim.fn.string(output))
 
-      if file and lnum and col and etype and msg then
-        -- Erreur avec fichier:ligne:colonne
-        table.insert(qf_items, {
-          filename = file,
-          lnum = tonumber(lnum),
-          col = tonumber(col),
-          type = etype:sub(1,1):upper(), -- 'E' pour error, 'W' pour warning
-          text = etype .. ': ' .. msg
-        })
-      else
-        -- Parser format sans colonne: file:line: type: message
-        file, lnum, etype, msg = line:match('([/%.%w_%-]+%.%w+):(%d+):%s*(%w+):%s*(.*)')
-
-        -- Fallback avec pattern simple
-        if not file then
-          file, lnum, etype, msg = line:match('([^:]+):(%d+):%s*(%w+):%s*(.*)')
-        end
-
-        if file and lnum and etype and msg then
-          table.insert(qf_items, {
-            filename = file,
-            lnum = tonumber(lnum),
-            type = etype:sub(1,1):upper(),
-            text = etype .. ': ' .. msg
-          })
-        else
-          -- Ligne générale (pas une erreur spécifique)
-          table.insert(qf_items, { text = line })
-        end
-      end
-    end
-  end
-
-  -- Utiliser setqflist avec la syntaxe correcte
-  vim.fn.setqflist({}, 'r', { title = 'Make Output', items = qf_items })
+  -- Restaurer l'errorformat
+  vim.o.errorformat = old_efm
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
