@@ -134,7 +134,12 @@ vim.api.nvim_create_user_command('Run', function(opts)
   end
 end, { nargs = '*' })
 
-vim.keymap.set('n', '<leader>mm', ':Make<CR>', { desc = 'Make with auto quickfix' })
+vim.keymap.set('n', '<leader>mm', function()
+  -- Sauvegarder tous les buffers modifiés avant le build
+  vim.cmd('silent! wall')
+  -- Exécuter la commande Make
+  vim.cmd('Make')
+end, { desc = 'Make with auto save and quickfix' })
 
 -- Make with specific targets
 vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
