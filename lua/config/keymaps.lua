@@ -114,7 +114,11 @@ vim.api.nvim_create_user_command('Run', function(opts)
     if exe_path then
       print("Running: " .. vim.fn.fnamemodify(exe_path, ":t"))
       -- Run from project root directory for proper relative paths
-      vim.cmd('cd ' .. vim.fn.shellescape(cmake_root) .. ' && ' .. vim.fn.shellescape(exe_path) .. ' ' .. opts.args)
+      local cmd = 'cd ' .. vim.fn.shellescape(cmake_root) .. ' && ' .. vim.fn.shellescape(exe_path)
+      if opts.args ~= '' then
+        cmd = cmd .. ' ' .. opts.args
+      end
+      vim.cmd('!' .. cmd)
     else
       print("No executable found in build directory. Available files:")
       local all_files = vim.fn.glob(build_dir .. "/**/*", false, true)
