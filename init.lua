@@ -280,11 +280,48 @@ require('lazy').setup({
   },
 
   {
-    'folke/tokyonight.nvim',
+    "nuvic/flexoki-nvim",
+    name = "flexoki",
+    lazy = false,
     priority = 1000,
     init = function()
-      vim.cmd.colorscheme 'tokyonight-night'
-      vim.cmd.hi 'Comment gui=none'
+      local function apply_white_functions()
+        local white = "#e6e6e6"
+        local hl = vim.api.nvim_set_hl
+        hl(0, "Function", { fg = white })
+        -- Treesitter / LSP groups
+        hl(0, "@function",              { fg = white })
+        hl(0, "@function.call",         { fg = white })
+        hl(0, "@function.builtin",      { fg = white })
+        hl(0, "@method",                { fg = white })
+        hl(0, "@method.call",           { fg = white })
+        hl(0, "@lsp.type.function",     { fg = white })
+        hl(0, "@lsp.typemod.function.defaultLibrary", { fg = white })
+      end
+
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "flexoki",
+        callback = function()
+          apply_white_functions()
+          -- Éclaircir légèrement le fond
+          vim.api.nvim_set_hl(0, "Normal", { bg = "#1b1a1a" })
+          vim.schedule(apply_white_functions)
+        end,
+      })
+    end,
+
+    config = function()
+      vim.opt.termguicolors = true
+
+      require("flexoki").setup({
+        variant = "moon",
+        dim_inactive_windows = false,
+        extend_background_behind_borders = true,
+        enable = { terminal = true },
+        styles = { bold = true, italic = false },
+      })
+
+      vim.cmd.colorscheme("flexoki")
     end,
   },
 
