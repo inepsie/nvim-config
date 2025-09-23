@@ -66,18 +66,6 @@ vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' }
 vim.keymap.set('n', '<leader>mr', ':Make run<CR>', { desc = '[M]ake [r]un' })
 vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
 
--- Quick make alternative
-vim.keymap.set('n', '<leader>mm', function()
-  vim.cmd('cexpr system("make 2>&1")')
-  local qflist = vim.fn.getqflist()
-  if #qflist > 0 then
-    vim.cmd('copen')
-    print("Make terminé avec " .. #qflist .. " entrée(s)")
-  else
-    vim.cmd('cclose')
-    print("Make réussi!")
-  end
-end, { desc = 'Quick [M]ake' })
 
 -- Reload config quickly
 vim.keymap.set('n', '<leader>rr', function()
