@@ -47,3 +47,17 @@ vim.api.nvim_create_user_command('Make', function(opts)
 end, { nargs = '*' })
 
 vim.keymap.set('n', '<leader>m', ':Make<CR>', { desc = 'Make with auto quickfix' })
+
+-- Display messages in a buffer
+vim.keymap.set('n', '<leader>qm', function()
+  -- Create a new temporary buffer
+  vim.cmd('new')
+  vim.cmd('setlocal buftype=nofile bufhidden=wipe noswapfile')
+  vim.cmd('file Messages')
+  -- Get and insert messages
+  local messages = vim.fn.execute('messages')
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(messages, '\n'))
+  -- Make buffer read-only
+  vim.bo.readonly = true
+  vim.bo.modifiable = false
+end, { desc = '[Q]uickfix [M]essages in buffer' })
