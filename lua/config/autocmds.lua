@@ -29,6 +29,17 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Close quickfix/location list with q"
 })
 
+-- Improved errorformat for C/C++ with gcc/clang
+vim.opt.errorformat:prepend({
+  '%f:%l:%c: %trror: %m',      -- gcc/clang format with column
+  '%f:%l:%c: %tarning: %m',    -- warnings with column
+  '%f:%l:%c: %tote: %m',       -- notes with column
+  '%f:%l: %trror: %m',         -- format without column
+  '%f:%l: %tarning: %m',       -- warnings without column
+  'make: *** %m',              -- make errors
+  'ld: %m',                    -- linker errors
+})
+
 -- Set makeprg for CMake projects
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*",

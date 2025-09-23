@@ -16,10 +16,23 @@ vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
+-- Use CTRL+<hl> to switch between windows (j/k reserved for quickfix)
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- Use C-j/C-k for quickfix navigation instead of window navigation
+vim.keymap.set('n', '<C-j>', ':cnext<CR>', { desc = 'Next quickfix item' })
+vim.keymap.set('n', '<C-k>', ':cprev<CR>', { desc = 'Previous quickfix item' })
+
+-- Extended window navigation with <leader>w
+vim.keymap.set('n', '<leader>wh', '<C-w><C-h>', { desc = 'Fenêtre gauche' })
+vim.keymap.set('n', '<leader>wj', '<C-w><C-j>', { desc = 'Fenêtre bas' })
+vim.keymap.set('n', '<leader>wk', '<C-w><C-k>', { desc = 'Fenêtre haut' })
+vim.keymap.set('n', '<leader>wl', '<C-w><C-l>', { desc = 'Fenêtre droite' })
+vim.keymap.set('n', '<leader>ww', '<C-w>w', { desc = 'Fenêtre suivante' })
+vim.keymap.set('n', '<leader>wq', '<C-w>q', { desc = 'Fermer fenêtre' })
+vim.keymap.set('n', '<leader>wv', '<C-w>v', { desc = 'Split vertical' })
+vim.keymap.set('n', '<leader>ws', '<C-w>s', { desc = 'Split horizontal' })
 
 -- Tab management
 vim.keymap.set('n', '<leader>tc', ':tabclose<CR>', { desc = 'Close current tab' })
@@ -47,6 +60,35 @@ vim.api.nvim_create_user_command('Make', function(opts)
 end, { nargs = '*' })
 
 vim.keymap.set('n', '<leader>m', ':Make<CR>', { desc = 'Make with auto quickfix' })
+
+-- Make with specific targets
+vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
+vim.keymap.set('n', '<leader>mr', ':Make run<CR>', { desc = '[M]ake [r]un' })
+vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
+
+-- Quick make alternative
+vim.keymap.set('n', '<leader>mm', function()
+  vim.cmd('cexpr system("make 2>&1")')
+  local qflist = vim.fn.getqflist()
+  if #qflist > 0 then
+    vim.cmd('copen')
+    print("Make terminé avec " .. #qflist .. " entrée(s)")
+  else
+    vim.cmd('cclose')
+    print("Make réussi!")
+  end
+end, { desc = 'Quick [M]ake' })
+
+-- Reload config quickly
+vim.keymap.set('n', '<leader>rr', function()
+  for name,_ in pairs(package.loaded) do
+    if name:match('^plugins') or name:match('^config') or name:match('^custom') or name:match('^kickstart') then
+      package.loaded[name] = nil
+    end
+  end
+  dofile(vim.env.MYVIMRC)
+  vim.notify("Config rechargée!", vim.log.levels.INFO)
+end, { desc = 'Recharger config' })
 
 -- Display messages in a buffer
 vim.keymap.set('n', '<leader>qm', function()

@@ -41,6 +41,26 @@ vim.o.signcolumn = 'yes'
 -- Decrease update time
 vim.o.updatetime = 250
 
+-- Decrease mapped sequence wait time
+vim.o.timeoutlen = 300
+
+-- Configure how new splits should be opened
+vim.o.splitright = true
+vim.o.splitbelow = true
+
+-- Display whitespace characters
+vim.o.list = true
+vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+
+-- Preview substitutions live, as you type!
+vim.o.inccommand = 'split'
+
+-- Minimal number of screen lines to keep above and below the cursor
+vim.o.scrolloff = 10
+
+-- Confirm before failing due to unsaved changes
+vim.o.confirm = true
+
 -- Configure tab stops for code files
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "cpp", "c", "h", "hpp", "lua", "python" },
@@ -65,4 +85,16 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function()
     vim.highlight.on_yank()
   end,
+})
+
+-- GLSL filetype configuration
+vim.filetype.add({
+  extension = {
+    comp = 'glsl',
+    vert = 'glsl',
+    frag = 'glsl',
+    geom = 'glsl',
+    tesc = 'glsl',
+    tese = 'glsl',
+  },
 })
