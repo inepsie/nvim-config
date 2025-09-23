@@ -146,7 +146,7 @@ require('lazy').setup({
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
       { 'j-hui/fidget.nvim', opts = {} },
-      { 'folke/neodev.nvim', opts = {} },
+      { 'folke/lazydev.nvim', ft = 'lua', opts = {} },
     },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -224,7 +224,7 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = vim.tbl_keys(servers),
+        automatic_installation = false,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
