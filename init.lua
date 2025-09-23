@@ -236,16 +236,18 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
   local output = vim.fn.system(full_cmd)
 
-  -- Solution simple et robuste pour la quickfix
+  -- Solution sans errorformat - setqflist direct avec items
   local lines = vim.split(output, '\n')
+  local qf_items = {}
 
-  -- Vider la quickfix et ajouter les lignes une par une
-  vim.cmd('cexpr []')
   for _, line in ipairs(lines) do
     if line:match('%S') then  -- si la ligne n'est pas vide
-      vim.cmd('caddexpr ' .. vim.fn.string(line))
+      table.insert(qf_items, { text = line })
     end
   end
+
+  -- Utiliser setqflist avec items directement (sans parsing errorformat)
+  vim.fn.setqflist(qf_items, 'r', { title = 'Make Output' })
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
