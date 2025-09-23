@@ -236,9 +236,16 @@ vim.api.nvim_create_user_command('Make', function(opts)
   local full_cmd = 'cd ' .. vim.fn.shellescape(cwd) .. ' && ' .. cmd .. ' 2>&1'
   local output = vim.fn.system(full_cmd)
 
-  -- Utiliser cexpr avec une chaîne sûre
+  -- Utiliser setqflist avec errorformat pour parser les erreurs
   vim.fn.setqflist({}, 'r')  -- Vider la quickfix list
-  vim.fn.cexpr(output)
+
+  -- Utiliser setqflist avec lines et errorformat pour parser automatiquement
+  local lines = vim.split(output, '\n')
+  vim.fn.setqflist({}, 'r', {
+    title = 'Make Output',
+    lines = lines,
+    efm = vim.o.errorformat
+  })
 
   -- Vérifier s'il y a des erreurs et ouvrir quickfix
   local qflist = vim.fn.getqflist()
