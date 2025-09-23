@@ -59,7 +59,7 @@ vim.api.nvim_create_user_command('Make', function(opts)
   vim.cmd('cwindow')
 end, { nargs = '*' })
 
-vim.keymap.set('n', '<leader>m', ':Make<CR>', { desc = 'Make with auto quickfix' })
+vim.keymap.set('n', '<leader>mm', ':Make<CR>', { desc = 'Make with auto quickfix' })
 
 -- Make with specific targets
 vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
