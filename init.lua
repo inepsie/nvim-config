@@ -243,7 +243,13 @@ vim.api.nvim_create_user_command('Make', function(opts)
   for _, line in ipairs(lines) do
     if line:match('%S') then  -- si la ligne n'est pas vide
       -- Parser les erreurs C/C++ format: file:line:col: type: message
+      -- Pattern plus robuste pour chemins avec /
       local file, lnum, col, etype, msg = line:match('([^:]+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+
+      -- Si pas trouvé, essayer avec un pattern plus permissif pour les chemins
+      if not file then
+        file, lnum, col, etype, msg = line:match('([/%.%w_%-]+%.%w+):(%d+):(%d+):%s*(%w+):%s*(.*)')
+      end
 
       if file and lnum and col and etype and msg then
         -- Erreur avec fichier:ligne:colonne
@@ -256,7 +262,12 @@ vim.api.nvim_create_user_command('Make', function(opts)
         })
       else
         -- Parser format sans colonne: file:line: type: message
-        file, lnum, etype, msg = line:match('([^:]+):(%d+):%s*(%w+):%s*(.*)')
+        file, lnum, etype, msg = line:match('([/%.%w_%-]+%.%w+):(%d+):%s*(%w+):%s*(.*)')
+
+        -- Fallback avec pattern simple
+        if not file then
+          file, lnum, etype, msg = line:match('([^:]+):(%d+):%s*(%w+):%s*(.*)')
+        end
 
         if file and lnum and etype and msg then
           table.insert(qf_items, {
