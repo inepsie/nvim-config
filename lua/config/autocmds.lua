@@ -30,15 +30,14 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- Improved errorformat for C/C++ with gcc/clang
-vim.opt.errorformat:prepend({
-  '%f:%l:%c: %trror: %m',      -- gcc/clang format with column
-  '%f:%l:%c: %tarning: %m',    -- warnings with column
-  '%f:%l:%c: %tote: %m',       -- notes with column
-  '%f:%l: %trror: %m',         -- format without column
-  '%f:%l: %tarning: %m',       -- warnings without column
-  'make: *** %m',              -- make errors
-  'ld: %m',                    -- linker errors
-})
+-- Using vim.cmd to avoid vim.opt.errorformat:prepend() bug
+vim.cmd('set errorformat+=%f:%l:%c:\\ %trror:\\ %m')      -- gcc/clang format with column
+vim.cmd('set errorformat+=%f:%l:%c:\\ %tarning:\\ %m')    -- warnings with column
+vim.cmd('set errorformat+=%f:%l:%c:\\ %tote:\\ %m')       -- notes with column
+vim.cmd('set errorformat+=%f:%l:\\ %trror:\\ %m')         -- format without column
+vim.cmd('set errorformat+=%f:%l:\\ %tarning:\\ %m')       -- warnings without column
+vim.cmd('set errorformat+=make:\\ ***\\ %m')              -- make errors
+vim.cmd('set errorformat+=ld:\\ %m')                      -- linker errors
 
 -- Set makeprg for CMake projects
 vim.api.nvim_create_autocmd("BufEnter", {
