@@ -143,7 +143,12 @@ end, { desc = 'Make with auto save and quickfix' })
 
 -- Make with specific targets
 vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
-vim.keymap.set('n', '<leader>mr', ':Run<CR>', { desc = 'Run project executable' })
+vim.keymap.set('n', '<leader>mr', function()
+  vim.cmd('Make')
+  vim.schedule(function()
+    vim.cmd('Run')
+  end)
+end, { desc = 'Make then run project executable' })
 vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
 
 
