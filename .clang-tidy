@@ -1,0 +1,36 @@
+---
+# Configuration clang-tidy pour projets C++
+Checks: >
+  *,
+  -abseil-*,
+  -android-*,
+  -fuchsia-*,
+  -google-*,
+  -llvm-*,
+  -llvmlibc-*,
+  -zircon-*,
+  -altera-*,
+  -cert-err58-cpp,
+  -misc-non-private-member-variables-in-classes,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '.*'
+
+FormatStyle: file
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: modernize-use-default-member-init.UseAssignment
+    value: true
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'std::shared_ptr;std::unique_ptr'
