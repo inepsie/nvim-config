@@ -206,8 +206,11 @@ require('lazy').setup({
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-      -- Skip cmp-nvim-lsp capabilities due to buffer errors
-      -- capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+      -- Setup cmp-nvim-lsp capabilities (should work with Neovim 0.11+)
+      local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+      if cmp_nvim_lsp_ok then
+        capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+      end
 
       local servers = {
         clangd = {},
@@ -258,6 +261,7 @@ require('lazy').setup({
         },
       },
       'saadparwaiz1/cmp_luasnip',
+      'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
     },
     config = function()
@@ -293,6 +297,7 @@ require('lazy').setup({
           end, { 'i', 's' }),
         },
         sources = {
+          { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
         },
