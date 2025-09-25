@@ -152,6 +152,11 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
+          -- Ensure we have a valid buffer
+          if not event.buf or type(event.buf) ~= "number" or not vim.api.nvim_buf_is_valid(event.buf) then
+            return
+          end
+
           local map = function(keys, func, desc)
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
@@ -266,6 +271,9 @@ require('lazy').setup({
           end,
         },
         completion = { completeopt = 'menu,menuone,noinsert' },
+        experimental = {
+          ghost_text = false,
+        },
 
         mapping = cmp.mapping.preset.insert {
           ['<C-n>'] = cmp.mapping.select_next_item(),
