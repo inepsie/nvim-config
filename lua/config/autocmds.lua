@@ -1,21 +1,5 @@
 -- Autocommands configuration
 
--- Fix for nvim-cmp LSP buffer error
-vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
-  pattern = "*",
-  callback = function(args)
-    -- Ensure we have a valid buffer number
-    if not args.buf or type(args.buf) ~= "number" then
-      return
-    end
-    -- Only proceed if buffer is valid and loaded
-    if not vim.api.nvim_buf_is_valid(args.buf) or not vim.api.nvim_buf_is_loaded(args.buf) then
-      return
-    end
-  end,
-  desc = "Prevent LSP buffer errors in cmp"
-})
-
 -- Automatically open quickfix window after quickfix commands
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
   pattern = "[^l]*",
