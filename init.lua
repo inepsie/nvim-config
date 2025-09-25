@@ -205,7 +205,12 @@ require('lazy').setup({
       })
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
+      -- Safely setup cmp-nvim-lsp capabilities
+      local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+      if cmp_nvim_lsp_ok then
+        capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+      end
 
       local servers = {
         clangd = {},
@@ -236,6 +241,7 @@ require('lazy').setup({
 
   {
     'hrsh7th/nvim-cmp',
+    enabled = false,
     event = 'InsertEnter',
     dependencies = {
       {
@@ -264,36 +270,8 @@ require('lazy').setup({
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
 
-      -- Override cmp_nvim_lsp to handle buffer issues
-      local cmp_nvim_lsp = require('cmp_nvim_lsp')
-      local original_complete = cmp_nvim_lsp.complete
-      cmp_nvim_lsp.complete = function(self, params, callback)
-        -- Ensure we have a valid buffer
-        local bufnr = vim.api.nvim_get_current_buf()
-        if not bufnr or type(bufnr) ~= "number" or not vim.api.nvim_buf_is_valid(bufnr) then
-          callback({ items = {}, isIncomplete = false })
-          return
-        end
-        -- Call original with protection
-        local ok, result = pcall(original_complete, self, params, callback)
-        if not ok then
-          callback({ items = {}, isIncomplete = false })
-        end
-      end
 
       cmp.setup {
-        enabled = function()
-          -- Disable in command line
-          if vim.api.nvim_get_mode().mode == 'c' then
-            return false
-          end
-          -- Disable if buffer is not valid
-          local bufnr = vim.api.nvim_get_current_buf()
-          if not bufnr or type(bufnr) ~= "number" or not vim.api.nvim_buf_is_valid(bufnr) then
-            return false
-          end
-          return true
-        end,
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -323,17 +301,7 @@ require('lazy').setup({
           end, { 'i', 's' }),
         },
         sources = {
-          {
-            name = 'nvim_lsp',
-            entry_filter = function(entry, ctx)
-              -- Filter out entries that might cause buffer errors
-              local bufnr = ctx.bufnr
-              if not bufnr or type(bufnr) ~= "number" or not vim.api.nvim_buf_is_valid(bufnr) then
-                return false
-              end
-              return true
-            end
-          },
+          { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
         },
