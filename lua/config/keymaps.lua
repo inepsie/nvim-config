@@ -176,3 +176,7 @@ vim.keymap.set('n', '<leader>qm', function()
   vim.bo.readonly = true
   vim.bo.modifiable = false
 end, { desc = '[Q]uickfix [M]essages in buffer' })
+
+-- Linting keybindings
+vim.keymap.set('n', '<leader>cl', ':LintFile<CR>', { desc = '[C]ode [L]int current file' })
+vim.keymap.set('n', '<leader>cL', ':LintToggle<CR>', { desc = '[C]ode [L]int toggle auto-linting' })
