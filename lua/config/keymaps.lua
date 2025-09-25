@@ -180,3 +180,11 @@ end, { desc = '[Q]uickfix [M]essages in buffer' })
 -- Linting keybindings
 vim.keymap.set('n', '<leader>cl', ':LintFile<CR>', { desc = '[C]ode [L]int current file' })
 vim.keymap.set('n', '<leader>cL', ':LintToggle<CR>', { desc = '[C]ode [L]int toggle auto-linting' })
+
+-- Manual clang-tidy for thorough analysis (slower)
+vim.keymap.set('n', '<leader>ct', function()
+  local lint = require('lint')
+  -- Temporarily use clang-tidy for this file only
+  lint.try_lint({ 'clang_tidy_custom' })
+  vim.notify('Running thorough clang-tidy analysis...', vim.log.levels.INFO)
+end, { desc = '[C]ode [T]idy analysis (slow)' })

@@ -12,7 +12,8 @@ return {
         stdin = false,
         args = {
           '--format-style=file', -- Use .clang-format if available
-          '--header-filter=.*',   -- Check headers too
+          '--header-filter=', -- Don't check headers for speed
+          '--checks=-*,readability-*,performance-*,bugprone-*,modernize-*', -- Only essential checks
         },
         stream = 'stdout',
         ignore_exitcode = true,
@@ -83,10 +84,10 @@ return {
 
       lint.linters_by_ft = {
         markdown = { 'markdownlint' },
-        c = { 'clang_tidy_custom', 'clang_warnings' },
-        cpp = { 'clang_tidy_custom', 'clang_warnings' },
-        cc = { 'clang_tidy_custom', 'clang_warnings' },
-        cxx = { 'clang_tidy_custom', 'clang_warnings' },
+        c = { 'clang_warnings' }, -- Only fast clang warnings for now
+        cpp = { 'clang_warnings' },
+        cc = { 'clang_warnings' },
+        cxx = { 'clang_warnings' },
       }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
