@@ -87,6 +87,47 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- Configure diagnostics display
+vim.diagnostic.config {
+  -- Update diagnostics in insert mode (can be slow)
+  update_in_insert = false,
+  -- Only underline errors, not warnings
+  underline = { severity = vim.diagnostic.severity.ERROR },
+  -- Configure diagnostic signs
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = '󰅚 ',
+      [vim.diagnostic.severity.WARN] = '󰀪 ',
+      [vim.diagnostic.severity.INFO] = '󰋽 ',
+      [vim.diagnostic.severity.HINT] = '󰌶 ',
+    },
+  },
+  -- Enable virtual text (inline error messages)
+  virtual_text = {
+    -- Only show virtual text for errors and warnings, not hints/info
+    severity = { min = vim.diagnostic.severity.WARN },
+    -- Add source information to the message
+    source = "if_many",
+    format = function(diagnostic)
+      local diagnostic_message = {
+        [vim.diagnostic.severity.ERROR] = diagnostic.message,
+        [vim.diagnostic.severity.WARN] = diagnostic.message,
+        [vim.diagnostic.severity.INFO] = diagnostic.message,
+        [vim.diagnostic.severity.HINT] = diagnostic.message,
+      }
+      return diagnostic_message[diagnostic.severity]
+    end,
+  },
+  -- Configure floating window for hover diagnostics
+  float = {
+    focusable = false,
+    close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+    border = 'rounded',
+    source = 'always',
+    prefix = ' ',
+  },
+}
+
 -- GLSL filetype configuration
 vim.filetype.add({
   extension = {
