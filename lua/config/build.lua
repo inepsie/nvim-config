@@ -5,7 +5,12 @@ local M = {}
 
 -- Project type detection
 function M.detect_project_type()
+  -- Start from current working directory, not the current file
   local cwd = vim.fn.getcwd()
+
+  -- If we're editing a file, also try from the file's directory
+  local current_file = vim.fn.expand("%:p")
+  local file_dir = current_file ~= "" and vim.fn.fnamemodify(current_file, ":h") or nil
 
   -- Check for various project files in order of preference
   local project_files = {
@@ -33,7 +38,18 @@ function M.detect_project_type()
     return nil, "unknown", nil
   end
 
-  return find_project_root(cwd)
+  -- Try current working directory first
+  local root, ptype, bdir = find_project_root(cwd)
+  if root then
+    return root, ptype, bdir
+  end
+
+  -- If not found and we have a file open, try from file's directory
+  if file_dir and file_dir ~= cwd then
+    return find_project_root(file_dir)
+  end
+
+  return nil, "unknown", nil
 end
 
 -- Generic build command
@@ -232,24 +248,35 @@ function M.find_and_run_executable(root, build_subdir, args)
   local search_dirs = { root }
   if build_subdir then
     table.insert(search_dirs, root .. "/" .. build_subdir)
+    -- Also search in common subdirectories of build
+    table.insert(search_dirs, root .. "/" .. build_subdir .. "/bin")
+    table.insert(search_dirs, root .. "/" .. build_subdir .. "/Release")
+    table.insert(search_dirs, root .. "/" .. build_subdir .. "/Debug")
   end
 
   for _, dir in ipairs(search_dirs) do
-    local files = vim.fn.glob(dir .. "/*", false, true)
-    for _, file in ipairs(files) do
-      if vim.fn.isdirectory(file) == 0 and
-         vim.fn.executable(file) == 1 and
-         not file:match("%.o$") and
-         not file:match("%.so$") and
-         not file:match("%.a$") then
-        local cmd = string.format("cd %s && %s %s", vim.fn.shellescape(root), vim.fn.shellescape(file), args)
-        vim.cmd("!" .. cmd)
-        return
+    if vim.fn.isdirectory(dir) == 1 then
+      -- Search recursively in directory
+      local files = vim.fn.glob(dir .. "/**/*", false, true)
+      for _, file in ipairs(files) do
+        if vim.fn.isdirectory(file) == 0 and
+           vim.fn.executable(file) == 1 and
+           not file:match("%.o$") and
+           not file:match("%.so$") and
+           not file:match("%.a$") and
+           not file:match("%.cmake$") and
+           not file:match("CMakeFiles") and
+           not file:match("%.git/") then
+          local cmd = string.format("cd %s && %s %s", vim.fn.shellescape(root), vim.fn.shellescape(file), args or "")
+          vim.notify("Running: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
+          vim.cmd("!" .. cmd)
+          return
+        end
       end
     end
   end
 
-  vim.notify("No executable found in " .. root, vim.log.levels.WARN)
+  vim.notify("No executable found in " .. root .. " (searched: " .. table.concat(search_dirs, ", ") .. ")", vim.log.levels.WARN)
 end
 
 -- Generic test command
