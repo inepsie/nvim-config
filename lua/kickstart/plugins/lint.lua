@@ -6,58 +6,17 @@ return {
     config = function()
       local lint = require 'lint'
 
-      -- Custom clang-tidy linter with auto-detected path
-      lint.linters.clang_tidy_custom = {
-        cmd = vim.fn.exepath('clang-tidy') ~= '' and vim.fn.exepath('clang-tidy') or 'clang-tidy',
-        stdin = false,
-        args = {
-          '--format-style=file', -- Use .clang-format if available
-          '--header-filter=', -- Don't check headers for speed
-          '--checks=-*,readability-*,performance-*,bugprone-*,modernize-*', -- Only essential checks
-        },
-        stream = 'stdout',
-        ignore_exitcode = true,
-        parser = function(output)
-          local diagnostics = {}
-          -- Parse clang-tidy output format: file:line:col: severity: message [check-name]
-          for line in output:gmatch('[^\r\n]+') do
-            local file, row, col, severity, message = line:match('([^:]+):(%d+):(%d+):%s*(%w+):%s*(.+)')
-            if file and row and col and severity and message then
-              -- Extract check name if present
-              local check_name = message:match('%[([^%]]+)%]$')
-              if check_name then
-                message = message:gsub('%s*%[' .. check_name .. '%]$', '')
-              end
-
-              table.insert(diagnostics, {
-                lnum = tonumber(row) - 1,
-                col = tonumber(col) - 1,
-                severity = severity == 'error' and vim.diagnostic.severity.ERROR
-                        or severity == 'warning' and vim.diagnostic.severity.WARN
-                        or vim.diagnostic.severity.INFO,
-                message = message .. (check_name and ' [' .. check_name .. ']' or ''),
-                source = 'clang-tidy',
-              })
-            end
-          end
-          return diagnostics
-        end,
-      }
-
-      -- Custom clang linter for comprehensive warnings
-      lint.linters.clang_warnings = {
-        cmd = vim.fn.exepath('clang') ~= '' and vim.fn.exepath('clang') or 'clang',
+      -- Portable GCC-based linter for C/C++
+      lint.linters.gcc_lint = {
+        cmd = 'gcc',
         stdin = false,
         args = {
           '-fsyntax-only',
           '-Wall',
           '-Wextra',
           '-Wpedantic',
-          '-Wconversion',
-          '-Wshadow',
-          '-Wunreachable-code',
-          '-std=c++20',
-          '--',
+          '-std=c17',
+          '-o', '/dev/null',
         },
         stream = 'stderr',
         ignore_exitcode = true,
@@ -74,7 +33,7 @@ return {
                         or severity == 'note' and vim.diagnostic.severity.INFO
                         or vim.diagnostic.severity.HINT,
                 message = message,
-                source = 'clang',
+                source = 'gcc',
               })
             end
           end
@@ -82,13 +41,67 @@ return {
         end,
       }
 
-      lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
-        c = { 'clang_warnings' }, -- Only fast clang warnings for now
-        cpp = { 'clang_warnings' },
-        cc = { 'clang_warnings' },
-        cxx = { 'clang_warnings' },
+      -- GCC-based linter for C++
+      lint.linters.gpp_lint = {
+        cmd = 'g++',
+        stdin = false,
+        args = {
+          '-fsyntax-only',
+          '-Wall',
+          '-Wextra',
+          '-Wpedantic',
+          '-std=c++17',
+          '-o', '/dev/null',
+        },
+        stream = 'stderr',
+        ignore_exitcode = true,
+        parser = function(output)
+          local diagnostics = {}
+          for line in output:gmatch('[^\r\n]+') do
+            local file, row, col, severity, message = line:match('([^:]+):(%d+):(%d+):%s*(%w+):%s*(.+)')
+            if file and row and col and severity and message then
+              table.insert(diagnostics, {
+                lnum = tonumber(row) - 1,
+                col = tonumber(col) - 1,
+                severity = severity == 'error' and vim.diagnostic.severity.ERROR
+                        or severity == 'warning' and vim.diagnostic.severity.WARN
+                        or severity == 'note' and vim.diagnostic.severity.INFO
+                        or vim.diagnostic.severity.HINT,
+                message = message,
+                source = 'g++',
+              })
+            end
+          end
+          return diagnostics
+        end,
       }
+
+      -- Auto-detect available linters and configure accordingly
+      local function setup_linters_by_ft()
+        local linters_by_ft = {
+          markdown = { 'markdownlint' },
+        }
+
+        -- Check for cppcheck (recommended)
+        if vim.fn.executable('cppcheck') == 1 then
+          linters_by_ft.c = { 'cppcheck' }
+          linters_by_ft.cpp = { 'cppcheck' }
+          linters_by_ft.cc = { 'cppcheck' }
+          linters_by_ft.cxx = { 'cppcheck' }
+        -- Fallback to GCC-based linting
+        elseif vim.fn.executable('gcc') == 1 and vim.fn.executable('g++') == 1 then
+          linters_by_ft.c = { 'gcc_lint' }
+          linters_by_ft.cpp = { 'gpp_lint' }
+          linters_by_ft.cc = { 'gpp_lint' }
+          linters_by_ft.cxx = { 'gpp_lint' }
+        else
+          vim.notify('Aucun linter C/C++ trouvé. Installer cppcheck recommandé: sudo apt install cppcheck', vim.log.levels.WARN)
+        end
+
+        return linters_by_ft
+      end
+
+      lint.linters_by_ft = setup_linters_by_ft()
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:

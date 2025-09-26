@@ -181,10 +181,18 @@ end, { desc = '[Q]uickfix [M]essages in buffer' })
 vim.keymap.set('n', '<leader>cl', ':LintFile<CR>', { desc = '[C]ode [L]int current file' })
 vim.keymap.set('n', '<leader>cL', ':LintToggle<CR>', { desc = '[C]ode [L]int toggle auto-linting' })
 
--- Manual clang-tidy for thorough analysis (slower)
+-- Manual enhanced linting for thorough analysis
 vim.keymap.set('n', '<leader>ct', function()
   local lint = require('lint')
-  -- Temporarily use clang-tidy for this file only
-  lint.try_lint({ 'clang_tidy_custom' })
-  vim.notify('Running thorough clang-tidy analysis...', vim.log.levels.INFO)
-end, { desc = '[C]ode [T]idy analysis (slow)' })
+
+  -- Check what linters are available
+  if vim.fn.executable('cppcheck') == 1 then
+    lint.try_lint({ 'cppcheck' })
+    vim.notify('Running cppcheck analysis...', vim.log.levels.INFO)
+  elseif vim.fn.executable('gcc') == 1 or vim.fn.executable('g++') == 1 then
+    lint.try_lint() -- Use configured gcc/g++ linters
+    vim.notify('Running GCC analysis...', vim.log.levels.INFO)
+  else
+    vim.notify('Aucun linter disponible. Installer cppcheck: sudo apt install cppcheck', vim.log.levels.WARN)
+  end
+end, { desc = '[C]ode [T]horough analysis' })
