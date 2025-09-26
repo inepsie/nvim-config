@@ -254,6 +254,8 @@ function M.find_and_run_executable(root, build_subdir, args)
     table.insert(search_dirs, root .. "/" .. build_subdir .. "/Debug")
   end
 
+  local candidates = {}
+
   for _, dir in ipairs(search_dirs) do
     if vim.fn.isdirectory(dir) == 1 then
       -- Search recursively in directory
@@ -266,17 +268,42 @@ function M.find_and_run_executable(root, build_subdir, args)
            not file:match("%.a$") and
            not file:match("%.cmake$") and
            not file:match("CMakeFiles") and
-           not file:match("%.git/") then
-          local cmd = string.format("cd %s && %s %s", vim.fn.shellescape(root), vim.fn.shellescape(file), args or "")
-          vim.notify("Running: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
-          vim.cmd("!" .. cmd)
-          return
+           not file:match("%.git/") and
+           not file:match("_deps/") and -- Ignore dependencies
+           not file:match("%.sh$") and -- Ignore shell scripts
+           not file:match("%.exe$") and -- Ignore Windows executables
+           not file:match("/hooks/") then -- Ignore git hooks
+
+          local filename = vim.fn.fnamemodify(file, ":t")
+          local priority = 0
+
+          -- Prioritize executables with project-like names
+          if filename:match("main") or filename:match("app") then
+            priority = 100
+          elseif filename:match(vim.fn.fnamemodify(root, ":t")) then
+            priority = 90 -- Match project directory name
+          elseif not filename:match("test") and not filename:match("sample") then
+            priority = 50 -- Non-test executables
+          end
+
+          table.insert(candidates, { file = file, priority = priority, name = filename })
         end
       end
     end
   end
 
-  vim.notify("No executable found in " .. root .. " (searched: " .. table.concat(search_dirs, ", ") .. ")", vim.log.levels.WARN)
+  -- Sort by priority (highest first)
+  table.sort(candidates, function(a, b) return a.priority > b.priority end)
+
+  if #candidates > 0 then
+    local best = candidates[1]
+    local cmd = string.format("cd %s && %s %s", vim.fn.shellescape(root), vim.fn.shellescape(best.file), args or "")
+    vim.notify("Running: " .. best.name .. " (priority: " .. best.priority .. ")", vim.log.levels.INFO)
+    vim.cmd("!" .. cmd)
+    return
+  end
+
+  vim.notify("No suitable executable found in " .. root .. " (searched: " .. table.concat(search_dirs, ", ") .. ")", vim.log.levels.WARN)
 end
 
 -- Generic test command

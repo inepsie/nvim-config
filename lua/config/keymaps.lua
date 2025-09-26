@@ -132,6 +132,41 @@ vim.api.nvim_create_user_command('CompileThis', function()
   end
 end, { desc = 'Compile current file directly' })
 
+-- Debug command to list all executable candidates
+vim.api.nvim_create_user_command('ListExecutables', function()
+  local root, project_type, build_dir = build_system.detect_project_type()
+  if not root then
+    vim.notify("No project detected", vim.log.levels.WARN)
+    return
+  end
+
+  local search_dirs = { root }
+  if build_dir then
+    table.insert(search_dirs, root .. "/" .. build_dir)
+    table.insert(search_dirs, root .. "/" .. build_dir .. "/bin")
+    table.insert(search_dirs, root .. "/" .. build_dir .. "/Release")
+    table.insert(search_dirs, root .. "/" .. build_dir .. "/Debug")
+  end
+
+  local candidates = {}
+  for _, dir in ipairs(search_dirs) do
+    if vim.fn.isdirectory(dir) == 1 then
+      local files = vim.fn.glob(dir .. "/**/*", false, true)
+      for _, file in ipairs(files) do
+        if vim.fn.isdirectory(file) == 0 and vim.fn.executable(file) == 1 then
+          table.insert(candidates, file)
+        end
+      end
+    end
+  end
+
+  if #candidates > 0 then
+    vim.notify("Found executables:\n" .. table.concat(candidates, "\n"), vim.log.levels.INFO)
+  else
+    vim.notify("No executables found in " .. table.concat(search_dirs, ", "), vim.log.levels.WARN)
+  end
+end, { desc = 'List all executable files in project' })
+
 vim.keymap.set('n', '<leader>mm', function()
   -- Sauvegarder tous les buffers modifiés avant le build
   vim.cmd('silent! wall')
