@@ -40,13 +40,13 @@ vim.keymap.set('n', '<leader>ws', '<C-w>s', { desc = 'Split horizontal' })
 -- Tab management
 vim.keymap.set('n', '<leader>tc', ':tabclose<CR>', { desc = 'Close current tab' })
 
--- CMake and Build keymaps
-vim.keymap.set('n', '<F5>', ':CMakeBuild<CR>', { desc = 'CMake Build' })
-vim.keymap.set('n', '<F6>', ':CMakeRun<CR>', { desc = 'CMake Run' })
-vim.keymap.set('n', '<leader>cg', ':CMakeGenerate<CR>', { desc = 'CMake Generate' })
-vim.keymap.set('n', '<leader>cb', ':CMakeBuild<CR>', { desc = 'CMake Build' })
-vim.keymap.set('n', '<leader>cr', ':CMakeRun<CR>', { desc = 'CMake Run' })
-vim.keymap.set('n', '<leader>ct', ':CMakeRunTest<CR>', { desc = 'CMake Run Tests' })
+-- Universal Build System keymaps
+vim.keymap.set('n', '<F5>', ':Build<CR>', { desc = 'Build Project' })
+vim.keymap.set('n', '<F6>', ':Run<CR>', { desc = 'Run Project' })
+vim.keymap.set('n', '<leader>cb', ':Build<CR>', { desc = '[C]ode [B]uild' })
+vim.keymap.set('n', '<leader>cr', ':Run<CR>', { desc = '[C]ode [R]un' })
+vim.keymap.set('n', '<leader>cT', ':Test<CR>', { desc = '[C]ode [T]est (uppercase)' })
+vim.keymap.set('n', '<leader>cx', ':Clean<CR>', { desc = '[C]ode Clean (e[x]tended)' })
 
 -- Quickfix navigation
 vim.keymap.set('n', '<leader>co', ':copen<CR>', { desc = 'Open quickfix list' })
@@ -54,7 +54,7 @@ vim.keymap.set('n', '<leader>cc', ':cclose<CR>', { desc = 'Close quickfix list' 
 vim.keymap.set('n', '<leader>cn', ':cnext<CR>', { desc = 'Next quickfix item' })
 vim.keymap.set('n', '<leader>cp', ':cprev<CR>', { desc = 'Previous quickfix item' })
 vim.keymap.set('n', '<leader>cf', ':cfirst<CR>', { desc = 'First quickfix item' })
-vim.keymap.set('n', '<leader>cl', ':clast<CR>', { desc = 'Last quickfix item' })
+vim.keymap.set('n', '<leader>cz', ':clast<CR>', { desc = 'Last quickfix item (z=end)' })
 
 -- Custom Make command that opens quickfix automatically
 vim.api.nvim_create_user_command('Make', function(opts)
@@ -62,97 +62,53 @@ vim.api.nvim_create_user_command('Make', function(opts)
   vim.cmd('cwindow')
 end, { nargs = '*' })
 
--- Intelligent Run command that detects CMake projects
+-- Universal Build System Commands
+local build_system = require('config.build')
+
+-- Create universal build commands
+vim.api.nvim_create_user_command('Build', function()
+  build_system.build()
+end, { desc = 'Build current project (auto-detect)' })
+
 vim.api.nvim_create_user_command('Run', function(opts)
-  -- Check if we're in a CMake project by looking for CMakeLists.txt
-  local function find_cmake_root()
-    local path = vim.fn.expand("%:p:h")
-    while path ~= "/" do
-      if vim.fn.filereadable(path .. "/CMakeLists.txt") == 1 then
-        return path
-      end
-      path = vim.fn.fnamemodify(path, ":h")
-    end
-    return nil
-  end
+  build_system.run(opts.args)
+end, { nargs = '*', desc = 'Run current project (auto-detect)' })
 
-  local cmake_root = find_cmake_root()
-  if cmake_root then
-    -- CMake project: try to find and run the executable
-    local build_dir = cmake_root .. "/build"
-    if vim.fn.isdirectory(build_dir) == 0 then
-      print("Build directory not found. Run make first!")
-      return
-    end
+vim.api.nvim_create_user_command('Test', function()
+  build_system.test()
+end, { desc = 'Test current project (auto-detect)' })
 
-    -- Look for executable in build directory (recursively)
-    local function find_executable(dir)
-      -- Try common executable locations and patterns
-      local patterns = {
-        dir .. "/*",           -- Direct in build
-        dir .. "/*/",          -- Subdirectories
-        dir .. "/*/*",         -- Files in subdirectories
-      }
+vim.api.nvim_create_user_command('Clean', function()
+  build_system.clean()
+end, { desc = 'Clean current project (auto-detect)' })
 
-      for _, pattern in ipairs(patterns) do
-        local files = vim.fn.glob(pattern, false, true)
-        for _, file in ipairs(files) do
-          -- Skip directories and common non-executables
-          if vim.fn.isdirectory(file) == 0 and
-             not file:match("%.o$") and
-             not file:match("%.a$") and
-             not file:match("%.so$") and
-             not file:match("%.cmake$") and
-             not file:match("CMakeFiles") and
-             not file:match("Makefile") and
-             vim.fn.executable(file) == 1 then
-            return file
-          end
-        end
-      end
-      return nil
-    end
-
-    local exe_path = find_executable(build_dir)
-    if exe_path then
-      print("Running: " .. vim.fn.fnamemodify(exe_path, ":t"))
-      -- Run from project root directory for proper relative paths
-      local cmd = 'cd ' .. vim.fn.shellescape(cmake_root) .. ' && ' .. vim.fn.shellescape(exe_path)
-      if opts.args ~= '' then
-        cmd = cmd .. ' ' .. opts.args
-      end
-      vim.cmd('!' .. cmd)
-    else
-      print("No executable found in build directory. Available files:")
-      local all_files = vim.fn.glob(build_dir .. "/**/*", false, true)
-      for i, file in ipairs(all_files) do
-        if i <= 5 then -- Show only first 5 files
-          print("  " .. vim.fn.fnamemodify(file, ":t"))
-        end
-      end
-    end
+-- Debug command to show detected project type
+vim.api.nvim_create_user_command('ProjectInfo', function()
+  local root, project_type, build_dir = build_system.detect_project_type()
+  if root then
+    vim.notify(string.format("Project: %s (%s)\nRoot: %s\nBuild dir: %s",
+      project_type, vim.fn.fnamemodify(root, ":t"), root, build_dir or "N/A"), vim.log.levels.INFO)
   else
-    -- Traditional make project: try make run
-    vim.cmd('make run ' .. opts.args)
+    vim.notify("No recognized project type found", vim.log.levels.WARN)
   end
-end, { nargs = '*' })
+end, { desc = 'Show detected project information' })
 
 vim.keymap.set('n', '<leader>mm', function()
   -- Sauvegarder tous les buffers modifiés avant le build
   vim.cmd('silent! wall')
-  -- Exécuter la commande Make
-  vim.cmd('Make')
-end, { desc = 'Make with auto save and quickfix' })
+  -- Exécuter la commande Build universelle
+  build_system.build()
+end, { desc = 'Build with auto save (universal)' })
 
--- Make with specific targets
-vim.keymap.set('n', '<leader>mc', ':Make clean<CR>', { desc = '[M]ake [c]lean' })
+-- Universal build system with specific targets
+vim.keymap.set('n', '<leader>mc', ':Clean<CR>', { desc = '[M]ake [c]lean (universal)' })
 vim.keymap.set('n', '<leader>mr', function()
-  vim.cmd('Make')
+  build_system.build()
   vim.schedule(function()
-    vim.cmd('Run')
+    build_system.run()
   end)
-end, { desc = 'Make then run project executable' })
-vim.keymap.set('n', '<leader>mt', ':Make test<CR>', { desc = '[M]ake [t]est' })
+end, { desc = 'Build then run project (universal)' })
+vim.keymap.set('n', '<leader>mt', ':Test<CR>', { desc = '[M]ake [t]est (universal)' })
 
 
 -- Reload config quickly
