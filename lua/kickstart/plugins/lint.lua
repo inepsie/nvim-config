@@ -6,9 +6,9 @@ return {
     config = function()
       local lint = require 'lint'
 
-      -- Custom clang-tidy linter with personal installation path
+      -- Custom clang-tidy linter with auto-detected path
       lint.linters.clang_tidy_custom = {
-        cmd = '/home/e20230004281/clang-format/bin/clang-tidy',
+        cmd = vim.fn.exepath('clang-tidy') ~= '' and vim.fn.exepath('clang-tidy') or 'clang-tidy',
         stdin = false,
         args = {
           '--format-style=file', -- Use .clang-format if available
@@ -46,7 +46,7 @@ return {
 
       -- Custom clang linter for comprehensive warnings
       lint.linters.clang_warnings = {
-        cmd = '/home/e20230004281/clang-format/bin/clang',
+        cmd = vim.fn.exepath('clang') ~= '' and vim.fn.exepath('clang') or 'clang',
         stdin = false,
         args = {
           '-fsyntax-only',
