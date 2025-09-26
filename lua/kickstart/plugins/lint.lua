@@ -16,7 +16,6 @@ return {
           '-Wextra',
           '-Wpedantic',
           '-std=c17',
-          '-o', '/dev/null',
         },
         stream = 'stderr',
         ignore_exitcode = true,
@@ -51,7 +50,6 @@ return {
           '-Wextra',
           '-Wpedantic',
           '-std=c++17',
-          '-o', '/dev/null',
         },
         stream = 'stderr',
         ignore_exitcode = true,
@@ -88,14 +86,16 @@ return {
           linters_by_ft.cpp = { 'cppcheck' }
           linters_by_ft.cc = { 'cppcheck' }
           linters_by_ft.cxx = { 'cppcheck' }
-        -- Fallback to GCC-based linting
-        elseif vim.fn.executable('gcc') == 1 and vim.fn.executable('g++') == 1 then
+          vim.notify('Using cppcheck for C/C++ linting', vim.log.levels.INFO)
+        -- Try built-in compiler linter (uses makeprg/errorformat)
+        elseif vim.fn.executable('gcc') == 1 then
           linters_by_ft.c = { 'gcc_lint' }
           linters_by_ft.cpp = { 'gpp_lint' }
           linters_by_ft.cc = { 'gpp_lint' }
           linters_by_ft.cxx = { 'gpp_lint' }
+          vim.notify('Using GCC for C/C++ linting', vim.log.levels.INFO)
         else
-          vim.notify('Aucun linter C/C++ trouvé. Installer cppcheck recommandé: sudo apt install cppcheck', vim.log.levels.WARN)
+          vim.notify('Aucun linter C/C++ trouvé. Installer cppcheck: sudo apt install cppcheck', vim.log.levels.WARN)
         end
 
         return linters_by_ft
@@ -152,8 +152,15 @@ return {
 
       -- Manual linting function for keybindings
       vim.api.nvim_create_user_command('LintFile', function()
-        lint.try_lint()
+        -- Clear previous message after a short delay
         vim.notify('Linting file...', vim.log.levels.INFO)
+
+        lint.try_lint()
+
+        -- Clear the linting message after 3 seconds
+        vim.defer_fn(function()
+          vim.notify('', vim.log.levels.INFO) -- Clear notification
+        end, 3000)
       end, { desc = 'Run linters on current file' })
 
       -- Function to toggle automatic linting
