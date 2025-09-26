@@ -89,9 +89,48 @@ vim.api.nvim_create_user_command('ProjectInfo', function()
     vim.notify(string.format("Project: %s (%s)\nRoot: %s\nBuild dir: %s",
       project_type, vim.fn.fnamemodify(root, ":t"), root, build_dir or "N/A"), vim.log.levels.INFO)
   else
-    vim.notify("No recognized project type found", vim.log.levels.WARN)
+    -- Show what files are available in current directory
+    local cwd = vim.fn.getcwd()
+    local c_files = vim.fn.glob("*.c", false, true)
+    local cpp_files = vim.fn.glob("*.{cpp,cxx,cc}", false, true)
+    local executables = {}
+    local files = vim.fn.glob("*", false, true)
+
+    for _, file in ipairs(files) do
+      if vim.fn.isdirectory(file) == 0 and vim.fn.executable(file) == 1 then
+        table.insert(executables, file)
+      end
+    end
+
+    local info = "No recognized project type found in " .. cwd .. "\n"
+    if #c_files > 0 then
+      info = info .. "C files: " .. table.concat(c_files, ", ") .. "\n"
+    end
+    if #cpp_files > 0 then
+      info = info .. "C++ files: " .. table.concat(cpp_files, ", ") .. "\n"
+    end
+    if #executables > 0 then
+      info = info .. "Executables: " .. table.concat(executables, ", ")
+    end
+
+    vim.notify(info, vim.log.levels.INFO)
   end
 end, { desc = 'Show detected project information' })
+
+-- Quick compile current file command
+vim.api.nvim_create_user_command('CompileThis', function()
+  local current_file = vim.fn.expand("%:p")
+  local ext = vim.fn.expand("%:e")
+  local output = vim.fn.expand("%:r")
+
+  if ext == "c" then
+    vim.cmd("!gcc -Wall -Wextra -std=c17 -o " .. vim.fn.shellescape(output) .. " " .. vim.fn.shellescape(current_file))
+  elseif ext == "cpp" or ext == "cxx" or ext == "cc" then
+    vim.cmd("!g++ -Wall -Wextra -std=c++17 -o " .. vim.fn.shellescape(output) .. " " .. vim.fn.shellescape(current_file))
+  else
+    vim.notify("Cannot compile " .. ext .. " files", vim.log.levels.ERROR)
+  end
+end, { desc = 'Compile current file directly' })
 
 vim.keymap.set('n', '<leader>mm', function()
   -- Sauvegarder tous les buffers modifiés avant le build

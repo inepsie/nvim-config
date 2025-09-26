@@ -41,9 +41,23 @@ function M.build()
   local root, project_type, build_dir = M.detect_project_type()
 
   if not root then
-    vim.notify("No recognized project type found. Using 'make'", vim.log.levels.WARN)
-    vim.cmd("make")
-    return
+    -- Try to detect C/C++ files and build them directly
+    local c_files = vim.fn.glob("*.c", false, true)
+    local cpp_files = vim.fn.glob("*.{cpp,cxx,cc}", false, true)
+
+    if #c_files > 0 then
+      vim.notify("Building C files with gcc...", vim.log.levels.INFO)
+      vim.cmd("!gcc -Wall -Wextra -std=c17 -o main " .. table.concat(c_files, " "))
+      return
+    elseif #cpp_files > 0 then
+      vim.notify("Building C++ files with g++...", vim.log.levels.INFO)
+      vim.cmd("!g++ -Wall -Wextra -std=c++17 -o main " .. table.concat(cpp_files, " "))
+      return
+    else
+      vim.notify("No recognized project type found. Trying 'make'...", vim.log.levels.WARN)
+      vim.cmd("make")
+      return
+    end
   end
 
   vim.notify("Building " .. project_type .. " project...", vim.log.levels.INFO)
@@ -113,8 +127,45 @@ function M.run(args)
   local root, project_type, build_dir = M.detect_project_type()
 
   if not root then
-    vim.notify("No recognized project type found", vim.log.levels.WARN)
-    return
+    -- Try to find and run executables in current directory
+    local executables = {}
+    local files = vim.fn.glob("*", false, true)
+
+    for _, file in ipairs(files) do
+      if vim.fn.isdirectory(file) == 0 and vim.fn.executable(file) == 1 then
+        table.insert(executables, file)
+      end
+    end
+
+    if #executables > 0 then
+      -- Run the first executable found, or main if it exists
+      local exec_to_run = "main"
+      if vim.fn.executable("main") == 0 then
+        exec_to_run = executables[1]
+      end
+      vim.notify("Running " .. exec_to_run .. "...", vim.log.levels.INFO)
+      vim.cmd("!" .. vim.fn.shellescape(exec_to_run) .. " " .. (args or ""))
+      return
+    else
+      -- Try to compile and run the current file if it's C/C++
+      local current_file = vim.fn.expand("%:p")
+      local ext = vim.fn.expand("%:e")
+
+      if ext == "c" then
+        vim.notify("Compiling and running C file...", vim.log.levels.INFO)
+        local output = vim.fn.expand("%:r")
+        vim.cmd("!gcc -Wall -Wextra -std=c17 -o " .. vim.fn.shellescape(output) .. " " .. vim.fn.shellescape(current_file) .. " && " .. vim.fn.shellescape(output) .. " " .. (args or ""))
+        return
+      elseif ext == "cpp" or ext == "cxx" or ext == "cc" then
+        vim.notify("Compiling and running C++ file...", vim.log.levels.INFO)
+        local output = vim.fn.expand("%:r")
+        vim.cmd("!g++ -Wall -Wextra -std=c++17 -o " .. vim.fn.shellescape(output) .. " " .. vim.fn.shellescape(current_file) .. " && " .. vim.fn.shellescape(output) .. " " .. (args or ""))
+        return
+      end
+
+      vim.notify("No recognized project type or executable found", vim.log.levels.WARN)
+      return
+    end
   end
 
   args = args or ""
