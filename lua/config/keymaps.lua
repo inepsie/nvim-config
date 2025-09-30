@@ -13,18 +13,23 @@ end, { desc = '[Q]uickfix [D]iagnostics (open buffers)' })
 vim.keymap.set('n', '<leader>qD', function()
   local cwd = vim.fn.getcwd()
 
-  -- Get all C/C++ files from git
-  local handle = io.popen('cd ' .. vim.fn.shellescape(cwd) .. ' && git ls-files | grep -E "\\.(cpp|h|c|cc|cxx|hpp)$"')
-  if not handle then
-    vim.notify("Failed to get project files", vim.log.levels.ERROR)
+  -- Get all C/C++ files from git using vim.fn.systemlist
+  local cmd = 'git ls-files'
+  local all_files = vim.fn.systemlist(cmd)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Not a git repository", vim.log.levels.ERROR)
     return
   end
 
+  -- Filter C/C++ files
   local files = {}
-  for file in handle:lines() do
-    table.insert(files, file)
+  for _, file in ipairs(all_files) do
+    if file:match("%.cpp$") or file:match("%.h$") or file:match("%.c$") or
+       file:match("%.cc$") or file:match("%.cxx$") or file:match("%.hpp$") then
+      table.insert(files, file)
+    end
   end
-  handle:close()
 
   if #files == 0 then
     vim.notify("No C/C++ files found in project", vim.log.levels.WARN)
