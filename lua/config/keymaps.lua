@@ -55,7 +55,9 @@ vim.keymap.set('n', '<leader>qD', function()
   for _, file in ipairs(files) do
     local full_path = root_dir .. "/" .. file
     if vim.fn.filereadable(full_path) == 1 then
-      vim.fn.bufload(full_path)
+      -- Create buffer and load it
+      local bufnr = vim.fn.bufadd(full_path)
+      vim.fn.bufload(bufnr)
     end
   end
 
