@@ -52,14 +52,24 @@ vim.keymap.set('n', '<leader>qD', function()
   vim.notify(string.format("Loading %d files for diagnostics...", #files), vim.log.levels.INFO)
 
   -- Load each file in a hidden buffer
+  local loaded_count = 0
   for _, file in ipairs(files) do
     local full_path = root_dir .. "/" .. file
     if vim.fn.filereadable(full_path) == 1 then
-      -- Create buffer and load it
-      local bufnr = vim.fn.bufadd(full_path)
-      vim.fn.bufload(bufnr)
+      -- Use pcall to handle errors gracefully
+      local ok, bufnr = pcall(vim.fn.bufadd, full_path)
+      if ok and bufnr then
+        -- Load buffer silently without swap file warnings
+        vim.cmd(string.format('silent! noautocmd badd %s', vim.fn.fnameescape(full_path)))
+        local load_ok = pcall(vim.fn.bufload, bufnr)
+        if load_ok then
+          loaded_count = loaded_count + 1
+        end
+      end
     end
   end
+
+  vim.notify(string.format("Successfully loaded %d/%d files", loaded_count, #files), vim.log.levels.INFO)
 
   -- Wait for LSP to analyze all files
   vim.defer_fn(function()
