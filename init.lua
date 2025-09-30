@@ -213,7 +213,12 @@ require('lazy').setup({
       end
 
       local servers = {
-        clangd = {},
+        clangd = {
+          on_attach = function(client, bufnr)
+            -- Populate workspace diagnostics for all project files
+            require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+          end,
+        },
         lua_ls = {
           settings = {
             Lua = {

@@ -100,5 +100,11 @@ return {
         },
       }
     end,
+  },
+
+  -- Workspace diagnostics for all project files
+  {
+    "artemave/workspace-diagnostics.nvim",
+    event = "LspAttach",
   }
 }
