@@ -11,10 +11,15 @@ end, { desc = '[Q]uickfix [D]iagnostics (open buffers)' })
 
 -- Load all project C/C++ files and show diagnostics
 vim.keymap.set('n', '<leader>qD', function()
-  local cwd = vim.fn.getcwd()
+  -- Get LSP root directory (more reliable than cwd)
+  local root_dir = vim.lsp.buf.list_workspace_folders()[1]
+  if not root_dir then
+    -- Fallback to current working directory
+    root_dir = vim.fn.getcwd()
+  end
 
   -- Get all C/C++ files from git using vim.fn.systemlist
-  local cmd = 'git ls-files'
+  local cmd = string.format('cd %s && git ls-files', vim.fn.shellescape(root_dir))
   local all_files = vim.fn.systemlist(cmd)
 
   if vim.v.shell_error ~= 0 then
@@ -23,7 +28,7 @@ vim.keymap.set('n', '<leader>qD', function()
   end
 
   -- DEBUG: Show total files found
-  vim.notify(string.format("Found %d total git files in %s", #all_files, cwd), vim.log.levels.INFO)
+  vim.notify(string.format("Found %d total git files in %s", #all_files, root_dir), vim.log.levels.INFO)
 
   -- Filter C/C++ files
   local files = {}
@@ -48,7 +53,7 @@ vim.keymap.set('n', '<leader>qD', function()
 
   -- Load each file in a hidden buffer
   for _, file in ipairs(files) do
-    local full_path = cwd .. "/" .. file
+    local full_path = root_dir .. "/" .. file
     if vim.fn.filereadable(full_path) == 1 then
       vim.fn.bufload(full_path)
     end
