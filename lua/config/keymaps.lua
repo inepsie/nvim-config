@@ -5,9 +5,28 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>qd', function()
-  -- Get all diagnostics from all buffers in the workspace
-  vim.diagnostic.setqflist({ open = true })
-end, { desc = '[Q]uickfix [D]iagnostics (all workspace)' })
+  -- Collect diagnostics from ALL loaded buffers (LSP workspace)
+  local all_diagnostics = vim.diagnostic.get(nil)
+
+  -- Convert to quickfix format
+  local qf_list = {}
+  for _, diag in ipairs(all_diagnostics) do
+    table.insert(qf_list, {
+      bufnr = diag.bufnr,
+      lnum = diag.lnum + 1,
+      col = diag.col + 1,
+      text = diag.message,
+      type = diag.severity == vim.diagnostic.severity.ERROR and 'E'
+             or diag.severity == vim.diagnostic.severity.WARN and 'W'
+             or diag.severity == vim.diagnostic.severity.INFO and 'I'
+             or 'H'
+    })
+  end
+
+  vim.fn.setqflist(qf_list, 'r')
+  vim.cmd('copen')
+  vim.notify(string.format('Found %d diagnostics in workspace', #qf_list), vim.log.levels.INFO)
+end, { desc = '[Q]uickfix [D]iagnostics (all loaded buffers)' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror details' })
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
