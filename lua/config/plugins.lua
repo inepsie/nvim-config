@@ -100,11 +100,5 @@ return {
         },
       }
     end,
-  },
-
-  -- Workspace diagnostics for all project files
-  {
-    "artemave/workspace-diagnostics.nvim",
-    lazy = false,  -- Load immediately, not on event
   }
 }
