@@ -74,6 +74,35 @@ return {
         end,
       }
 
+      -- GLSL linter using glslangValidator
+      lint.linters.glsl_lint = {
+        cmd = 'glslangValidator',
+        stdin = false,
+        args = {},
+        stream = 'stdout',
+        ignore_exitcode = true,
+        parser = function(output)
+          local diagnostics = {}
+          for line in output:gmatch('[^\r\n]+') do
+            -- Format: ERROR: 0:10: 'token' : message
+            -- or: WARNING: 0:10: 'token' : message
+            local severity, row, message = line:match('^(%w+):%s*%d+:(%d+):%s*(.+)')
+            if severity and row and message then
+              table.insert(diagnostics, {
+                lnum = tonumber(row) - 1,
+                col = 0,
+                severity = severity == 'ERROR' and vim.diagnostic.severity.ERROR
+                        or severity == 'WARNING' and vim.diagnostic.severity.WARN
+                        or vim.diagnostic.severity.INFO,
+                message = message,
+                source = 'glslangValidator',
+              })
+            end
+          end
+          return diagnostics
+        end,
+      }
+
       -- Auto-detect available linters and configure accordingly
       local function setup_linters_by_ft()
         local linters_by_ft = {
@@ -96,6 +125,19 @@ return {
           vim.notify('Using GCC for C/C++ linting', vim.log.levels.INFO)
         else
           vim.notify('Aucun linter C/C++ trouvé. Installer cppcheck: sudo apt install cppcheck', vim.log.levels.WARN)
+        end
+
+        -- Check for glslangValidator (GLSL shaders)
+        if vim.fn.executable('glslangValidator') == 1 then
+          linters_by_ft.glsl = { 'glsl_lint' }
+          linters_by_ft.vert = { 'glsl_lint' }
+          linters_by_ft.frag = { 'glsl_lint' }
+          linters_by_ft.geom = { 'glsl_lint' }
+          linters_by_ft.geo = { 'glsl_lint' }
+          linters_by_ft.comp = { 'glsl_lint' }
+          vim.notify('Using glslangValidator for GLSL linting', vim.log.levels.INFO)
+        else
+          vim.notify('Linter GLSL non trouvé. Installer: sudo apt install glslang-tools', vim.log.levels.WARN)
         end
 
         return linters_by_ft
