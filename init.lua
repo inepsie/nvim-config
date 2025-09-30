@@ -214,9 +214,12 @@ require('lazy').setup({
 
       local servers = {
         clangd = {
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
           on_attach = function(client, bufnr)
             -- Populate workspace diagnostics for all project files
-            require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+            local ws_diag = require("workspace-diagnostics")
+            ws_diag.populate_workspace_diagnostics(client, bufnr)
+            vim.notify("Workspace diagnostics populated for clangd", vim.log.levels.INFO)
           end,
         },
         lua_ls = {
