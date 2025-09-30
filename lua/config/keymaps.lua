@@ -27,9 +27,6 @@ vim.keymap.set('n', '<leader>qD', function()
     return
   end
 
-  -- DEBUG: Show total files found
-  vim.notify(string.format("Found %d total git files in %s", #all_files, root_dir), vim.log.levels.INFO)
-
   -- Filter C/C++ files
   local files = {}
   for _, file in ipairs(all_files) do
@@ -39,17 +36,12 @@ vim.keymap.set('n', '<leader>qD', function()
     end
   end
 
-  -- DEBUG: Show first few files
-  if #all_files > 0 then
-    vim.notify("First file: " .. all_files[1], vim.log.levels.INFO)
-  end
-
   if #files == 0 then
-    vim.notify(string.format("No C/C++ files found (filtered from %d total files)", #all_files), vim.log.levels.WARN)
+    vim.notify("No C/C++ files found in project", vim.log.levels.WARN)
     return
   end
 
-  vim.notify(string.format("Loading %d files for diagnostics...", #files), vim.log.levels.INFO)
+  vim.notify(string.format("Loading %d C/C++ files for diagnostics...", #files), vim.log.levels.INFO)
 
   -- Load each file in a hidden buffer
   local loaded_count = 0
@@ -69,14 +61,12 @@ vim.keymap.set('n', '<leader>qD', function()
     end
   end
 
-  vim.notify(string.format("Successfully loaded %d/%d files", loaded_count, #files), vim.log.levels.INFO)
-
   -- Wait for LSP to analyze all files
   vim.defer_fn(function()
     local diag_count = #vim.diagnostic.get(nil)
     vim.diagnostic.setqflist()
     vim.cmd('copen')
-    vim.notify(string.format("Found %d diagnostics across all project files", diag_count), vim.log.levels.INFO)
+    vim.notify(string.format("Found %d diagnostics in %d files", diag_count, loaded_count), vim.log.levels.INFO)
   end, 3000)  -- Wait 3 seconds for clangd to analyze
 end, { desc = '[Q]uickfix [D]iagnostics (ALL project files)' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror details' })
