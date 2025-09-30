@@ -8,6 +8,47 @@ vim.keymap.set('n', '<leader>qd', function()
   vim.diagnostic.setqflist()
   vim.cmd('copen')
 end, { desc = '[Q]uickfix [D]iagnostics (open buffers)' })
+
+-- Load all project C/C++ files and show diagnostics
+vim.keymap.set('n', '<leader>qD', function()
+  local cwd = vim.fn.getcwd()
+
+  -- Get all C/C++ files from git
+  local handle = io.popen('cd ' .. vim.fn.shellescape(cwd) .. ' && git ls-files | grep -E "\\.(cpp|h|c|cc|cxx|hpp)$"')
+  if not handle then
+    vim.notify("Failed to get project files", vim.log.levels.ERROR)
+    return
+  end
+
+  local files = {}
+  for file in handle:lines() do
+    table.insert(files, file)
+  end
+  handle:close()
+
+  if #files == 0 then
+    vim.notify("No C/C++ files found in project", vim.log.levels.WARN)
+    return
+  end
+
+  vim.notify(string.format("Loading %d files for diagnostics...", #files), vim.log.levels.INFO)
+
+  -- Load each file in a hidden buffer
+  for _, file in ipairs(files) do
+    local full_path = cwd .. "/" .. file
+    if vim.fn.filereadable(full_path) == 1 then
+      vim.fn.bufload(full_path)
+    end
+  end
+
+  -- Wait for LSP to analyze all files
+  vim.defer_fn(function()
+    local diag_count = #vim.diagnostic.get(nil)
+    vim.diagnostic.setqflist()
+    vim.cmd('copen')
+    vim.notify(string.format("Found %d diagnostics across all project files", diag_count), vim.log.levels.INFO)
+  end, 3000)  -- Wait 3 seconds for clangd to analyze
+end, { desc = '[Q]uickfix [D]iagnostics (ALL project files)' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror details' })
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
