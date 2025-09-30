@@ -22,6 +22,9 @@ vim.keymap.set('n', '<leader>qD', function()
     return
   end
 
+  -- DEBUG: Show total files found
+  vim.notify(string.format("Found %d total git files in %s", #all_files, cwd), vim.log.levels.INFO)
+
   -- Filter C/C++ files
   local files = {}
   for _, file in ipairs(all_files) do
@@ -31,8 +34,13 @@ vim.keymap.set('n', '<leader>qD', function()
     end
   end
 
+  -- DEBUG: Show first few files
+  if #all_files > 0 then
+    vim.notify("First file: " .. all_files[1], vim.log.levels.INFO)
+  end
+
   if #files == 0 then
-    vim.notify("No C/C++ files found in project", vim.log.levels.WARN)
+    vim.notify(string.format("No C/C++ files found (filtered from %d total files)", #all_files), vim.log.levels.WARN)
     return
   end
 
