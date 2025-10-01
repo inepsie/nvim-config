@@ -30,13 +30,15 @@ return {
         return "build"
       end,
       cmake_executor = {
-        name = "quickfix",
+        name = "terminal",
         default_opts = {
-          quickfix = {
-            show = "always",
-            position = "belowright",
-            size = 10,
-            auto_close_when_success = false
+          terminal = {
+            name = "CMake Build",
+            prefix_name = "[CMakeBuild]: ",
+            split_direction = "horizontal",
+            split_size = 11,
+            focus = false, -- Ne pas voler le focus pendant la compilation
+            close_on_exit = false, -- Garder ouvert pour voir les erreurs
           }
         }
       },
