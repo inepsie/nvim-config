@@ -39,7 +39,22 @@ return {
             auto_close_when_success = false
           }
         }
-      }
+      },
+      cmake_runner = {
+        name = "terminal",
+        default_opts = {
+          terminal = {
+            name = "Main Terminal",
+            prefix_name = "[CMakeRun]: ",
+            split_direction = "horizontal",
+            split_size = 11,
+          }
+        }
+      },
+      cmake_run_directory = function()
+        -- Lance toujours depuis la racine du projet, pas depuis build/bin
+        return vim.fn.getcwd()
+      end,
     }
   },
 
