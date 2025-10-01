@@ -84,13 +84,17 @@ function M.build()
       if vim.fn.exists(':CMakeBuild') == 2 then
         vim.cmd('CMakeBuild')
       else
-        -- Fallback to direct cmake commands
+        -- Fallback to direct cmake commands using makeprg
         local build_path = root .. "/" .. (build_dir or "build")
         if vim.fn.isdirectory(build_path) == 0 then
           vim.fn.mkdir(build_path, "p")
           vim.cmd("!" .. string.format("cd %s && cmake -B %s", vim.fn.shellescape(root), vim.fn.shellescape(build_path)))
         end
-        vim.cmd("!" .. string.format("cmake --build %s", vim.fn.shellescape(build_path)))
+        -- Use makeprg to capture errors in quickfix
+        local old_makeprg = vim.o.makeprg
+        vim.o.makeprg = string.format("cmake --build %s 2>&1", vim.fn.shellescape(build_path))
+        vim.cmd("make")
+        vim.o.makeprg = old_makeprg
       end
     end,
 
@@ -99,7 +103,10 @@ function M.build()
     end,
 
     ninja = function()
-      vim.cmd("!ninja")
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = "ninja 2>&1"
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
 
     meson = function()
@@ -107,23 +114,38 @@ function M.build()
       if vim.fn.isdirectory(build_path) == 0 then
         vim.cmd("!" .. string.format("cd %s && meson setup %s", vim.fn.shellescape(root), vim.fn.shellescape(build_path)))
       end
-      vim.cmd("!" .. string.format("cd %s && meson compile", vim.fn.shellescape(build_path)))
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = string.format("cd %s && meson compile 2>&1", vim.fn.shellescape(build_path))
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
 
     cargo = function()
-      vim.cmd("!cargo build")
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = "cargo build 2>&1"
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
 
     npm = function()
-      vim.cmd("!npm run build")
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = "npm run build 2>&1"
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
 
     gradle = function()
-      vim.cmd("!./gradlew build")
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = "./gradlew build 2>&1"
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
 
     maven = function()
-      vim.cmd("!mvn compile")
+      local old_makeprg = vim.o.makeprg
+      vim.o.makeprg = "mvn compile 2>&1"
+      vim.cmd("make")
+      vim.o.makeprg = old_makeprg
     end,
   }
 
