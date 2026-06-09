@@ -105,9 +105,13 @@ return {
 
       -- Auto-detect available linters and configure accordingly
       local function setup_linters_by_ft()
-        local linters_by_ft = {
-          markdown = { 'markdownlint' },
-        }
+        local linters_by_ft = {}
+
+        -- N'active markdownlint que s'il est installé (même garde que pour C/C++/GLSL),
+        -- sinon nvim-lint lève ENOENT à chaque ouverture de fichier .md.
+        if vim.fn.executable('markdownlint') == 1 then
+          linters_by_ft.markdown = { 'markdownlint' }
+        end
 
         -- Check for cppcheck (recommended)
         if vim.fn.executable('cppcheck') == 1 then

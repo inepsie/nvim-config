@@ -374,17 +374,31 @@ require('lazy').setup({
   {
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    opts = {
-      ensure_installed = { 'bash', 'c', 'cpp', 'glsl', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
-      auto_install = true,
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = { 'ruby' },
-      },
-      indent = { enable = true, disable = { 'ruby' } },
-    },
-    config = function(_, opts)
-      require('nvim-treesitter.configs').setup(opts)
+    config = function()
+      -- nvim 0.12 fournit le highlight treesitter nativement. On n'utilise plus
+      -- l'API legacy require('nvim-treesitter.configs').setup{ highlight = ... },
+      -- incompatible avec le runtime 0.12 (crash :range() sur node nil).
+      --
+      -- Les queries d'injection markdown/markdown_inline de nvim-treesitter (master)
+      -- sont incompatibles avec le runtime treesitter de nvim 0.12 et provoquent un
+      -- crash asynchrone (languagetree.lua:596 → :range() sur node nil). On les
+      -- neutralise en mémoire (override à vide) — les fichiers du plugin restent
+      -- intacts, et le highlight de base continue de fonctionner.
+      for _, lang in ipairs { 'markdown', 'markdown_inline' } do
+        pcall(vim.treesitter.query.set, lang, 'injections', '')
+      end
+
+      -- Démarre le highlight natif par filetype quand un parser est disponible.
+      -- Parsers déjà présents : bash c cpp glsl html lua luadoc markdown
+      -- markdown_inline vim vimdoc. Les autres : :TSInstall <lang>.
+      vim.api.nvim_create_autocmd('FileType', {
+        callback = function(args)
+          local lang = vim.treesitter.language.get_lang(args.match) or args.match
+          if pcall(vim.treesitter.language.add, lang) then
+            vim.treesitter.start(args.buf, lang)
+          end
+        end,
+      })
     end,
   },
 
